@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Pencil, Power, AppWindow, Search, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { listOrgUsers, lookupUser, inviteUser, updateUser, toggleUserStatus, getUserApps } from '../../api/users';
+import { getUserRolesForApp } from '../../api/roles';
 import { extractArray, extractData, extractPagination } from '../../api/helpers';
 import { User, App } from '../../types';
 
@@ -41,10 +42,27 @@ export default function UsersPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await listOrgUsers(orgId, page, LIMIT);
-      setUsers(extractArray<User>(res));
-      const pagination = extractPagination(res);
-      setTotalPages(pagination.totalPages ?? 1);
+      const res = await listOrgUsers(orgId, 1, 100);
+      const allUsers = extractArray<User>(res);
+
+      // Filter to only users that have roles in the books app
+      const usersWithAccess = await Promise.all(
+        allUsers.map(async (u) => {
+          try {
+            const rolesRes = await getUserRolesForApp(u.id, 'books');
+            const roles = extractArray(rolesRes);
+            return roles.length > 0 ? u : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+      const booksUsers = usersWithAccess.filter((u): u is User => u !== null);
+
+      // Client-side pagination
+      const start = (page - 1) * LIMIT;
+      setUsers(booksUsers.slice(start, start + LIMIT));
+      setTotalPages(Math.max(1, Math.ceil(booksUsers.length / LIMIT)));
     } catch {
       setError('Failed to load users.');
     } finally {

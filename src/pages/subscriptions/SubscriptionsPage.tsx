@@ -53,7 +53,15 @@ export default function SubscriptionsPage() {
     setError('');
     try {
       const res = await getOrgSubscriptions(orgId);
-      setSubscriptions(extractArray<Subscription>(res));
+      const allSubs = extractArray<any>(res);
+      // Filter to only books app subscriptions
+      const booksSubs = allSubs.filter((s: any) =>
+        s.appSlug === 'books' ||
+        s.app?.slug === 'books' ||
+        s.appId === 'be51509b-742b-4e58-a5ba-36808a6106a1'
+      );
+      console.log('All subs:', allSubs, 'Books subs:', booksSubs);
+      setSubscriptions(booksSubs);
     } catch {
       setError('Failed to load subscriptions.');
     } finally {

@@ -1,25 +1,45 @@
 import { useState, useEffect } from 'react';
-import { Check, Eye, BarChart3, Search, X, Loader2 } from 'lucide-react';
+import { Eye, BarChart3, X, Loader2, Users, Check } from 'lucide-react';
 import {
   listPlans,
   getPlanLimits,
   getFeatureComparison,
-  checkFeatureAccess,
-  checkQuota,
-  checkSeatLimit,
 } from '../../api/plans';
 import { extractArray, extractData } from '../../api/helpers';
-import { Plan, PlanLimit } from '../../types';
+
+const APP_SLUG = 'books';
+
+interface PlanData {
+  slug: string;
+  name: string;
+  maxUsers: number | null;
+  pricing: {
+    monthly: number;
+    yearly: number;
+  };
+}
+
+interface PlanLimit {
+  limitKey: string;
+  limitValue: number;
+  limitType: string;
+  resetPeriod: string;
+}
+
+function formatPrice(amount: number): string {
+  if (amount === 0) return 'Free';
+  return `₹${amount.toLocaleString('en-IN')}`;
+}
 
 export default function PlansPage() {
-  const [appSlug, setAppSlug] = useState('books');
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plans, setPlans] = useState<PlanData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   // Limits modal
   const [showLimitsModal, setShowLimitsModal] = useState(false);
-  const [limitsTarget, setLimitsTarget] = useState<Plan | null>(null);
+  const [limitsTarget, setLimitsTarget] = useState<PlanData | null>(null);
   const [limits, setLimits] = useState<PlanLimit[]>([]);
   const [limitsLoading, setLimitsLoading] = useState(false);
 
@@ -28,36 +48,16 @@ export default function PlansPage() {
   const [comparison, setComparison] = useState<Record<string, unknown> | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
 
-  // Check feature access
-  const [featureOrgId, setFeatureOrgId] = useState('');
-  const [featureAppSlug, setFeatureAppSlug] = useState('');
-  const [featureName, setFeatureName] = useState('');
-  const [featureResult, setFeatureResult] = useState<{ hasAccess: boolean } | null>(null);
-  const [featureLoading, setFeatureLoading] = useState(false);
-
-  // Check quota
-  const [quotaOrgId, setQuotaOrgId] = useState('');
-  const [quotaAppSlug, setQuotaAppSlug] = useState('');
-  const [quotaLimitKey, setQuotaLimitKey] = useState('');
-  const [quotaResult, setQuotaResult] = useState<{ withinQuota: boolean } | null>(null);
-  const [quotaLoading, setQuotaLoading] = useState(false);
-
-  // Check seat limit
-  const [seatOrgId, setSeatOrgId] = useState('');
-  const [seatAppSlug, setSeatAppSlug] = useState('');
-  const [seatResult, setSeatResult] = useState<{ withinLimit: boolean } | null>(null);
-  const [seatLoading, setSeatLoading] = useState(false);
-
   useEffect(() => {
     fetchPlans();
-  }, [appSlug]);
+  }, []);
 
   const fetchPlans = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await listPlans(appSlug);
-      setPlans(extractArray<Plan>(res));
+      const res = await listPlans(APP_SLUG);
+      setPlans(extractArray<PlanData>(res));
     } catch {
       setError('Failed to load plans.');
     } finally {
@@ -65,15 +65,17 @@ export default function PlansPage() {
     }
   };
 
-  const handleViewLimits = async (plan: Plan) => {
+  const handleViewLimits = async (plan: PlanData) => {
     setLimitsTarget(plan);
     setShowLimitsModal(true);
     setLimitsLoading(true);
     try {
-      const res = await getPlanLimits(plan.slug, appSlug);
-      setLimits(extractArray<PlanLimit>(res));
+      const res: any = await getPlanLimits(plan.slug, APP_SLUG);
+      // Response: {success, data: {plan, app, limits: [...]}}
+      const limitsArr = res?.data?.limits ?? res?.limits ?? extractArray<PlanLimit>(res);
+      setLimits(Array.isArray(limitsArr) ? limitsArr : []);
     } catch {
-      setError('Failed to load plan limits.');
+      setLimits([]);
     } finally {
       setLimitsLoading(false);
     }
@@ -83,7 +85,7 @@ export default function PlansPage() {
     setComparisonLoading(true);
     setShowComparison(true);
     try {
-      const res = await getFeatureComparison(appSlug);
+      const res = await getFeatureComparison(APP_SLUG);
       setComparison(extractData<Record<string, unknown>>(res));
     } catch {
       setError('Failed to load feature comparison.');
@@ -92,82 +94,54 @@ export default function PlansPage() {
     }
   };
 
-  const handleCheckFeature = async () => {
-    setFeatureLoading(true);
-    setFeatureResult(null);
-    try {
-      const res = await checkFeatureAccess(featureOrgId, featureAppSlug, featureName);
-      if (res.success) {
-        setFeatureResult(res.data);
-      }
-    } catch {
-      setError('Failed to check feature access.');
-    } finally {
-      setFeatureLoading(false);
-    }
-  };
-
-  const handleCheckQuota = async () => {
-    setQuotaLoading(true);
-    setQuotaResult(null);
-    try {
-      const res = await checkQuota(quotaOrgId, quotaAppSlug, quotaLimitKey);
-      if (res.success) {
-        setQuotaResult(res.data);
-      }
-    } catch {
-      setError('Failed to check quota.');
-    } finally {
-      setQuotaLoading(false);
-    }
-  };
-
-  const handleCheckSeat = async () => {
-    setSeatLoading(true);
-    setSeatResult(null);
-    try {
-      const res = await checkSeatLimit(seatOrgId, seatAppSlug);
-      if (res.success) {
-        setSeatResult(res.data);
-      }
-    } catch {
-      setError('Failed to check seat limit.');
-    } finally {
-      setSeatLoading(false);
-    }
+  const highlightPlan = (slug: string) => {
+    if (slug === 'pro') return 'border-blue-500 ring-2 ring-blue-100';
+    return 'border-gray-200';
   };
 
   return (
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Plans &amp; Limits</h1>
-        <button
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Plans & Limits</h1>
+          <p className="text-sm text-gray-500 mt-1">Dream Books pricing plans</p>
+        </div>
+        {/* <button
           onClick={handleCompareFeatures}
           disabled={comparisonLoading}
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition"
         >
           {comparisonLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
           Compare Features
-        </button>
+        </button> */}
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-          {error}
-        </div>
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">{error}</div>
       )}
 
-      {/* Filter */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Filter by App Slug</label>
-        <input
-          type="text"
-          value={appSlug}
-          onChange={(e) => setAppSlug(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
-          placeholder="e.g. books"
-        />
+      {/* Billing Cycle Toggle */}
+      <div className="flex items-center justify-center mb-8">
+        <div className="bg-gray-100 rounded-lg p-1 inline-flex">
+          <button
+            onClick={() => setBillingCycle('monthly')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition ${
+              billingCycle === 'monthly' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle('yearly')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition ${
+              billingCycle === 'yearly' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Yearly
+            <span className="ml-1 text-xs text-green-600 font-semibold">Save ~20%</span>
+          </button>
+        </div>
       </div>
 
       {/* Plans Grid */}
@@ -178,50 +152,48 @@ export default function PlansPage() {
       ) : plans.length === 0 ? (
         <div className="text-center py-16 text-gray-500 text-sm">No plans found.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
-                <span
-                  className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    plan.isActive
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {plan.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-              <p className="text-sm text-gray-500 mb-4">{plan.description}</p>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
-                <span className="text-sm text-gray-500 ml-1">
-                  {plan.currency} / {plan.interval}
-                </span>
-              </div>
-              {plan.features && plan.features.length > 0 && (
-                <ul className="space-y-2 mb-6 flex-1">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <button
-                onClick={() => handleViewLimits(plan)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition mt-auto"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {plans.map((plan) => {
+            const price = billingCycle === 'monthly' ? plan.pricing.monthly : plan.pricing.yearly;
+            const perMonth = billingCycle === 'yearly' ? Math.round(plan.pricing.yearly / 12) : plan.pricing.monthly;
+
+            return (
+              <div
+                key={plan.slug}
+                className={`bg-white rounded-xl shadow-sm border-2 p-6 flex flex-col ${highlightPlan(plan.slug)}`}
               >
-                <Eye className="h-4 w-4" />
-                View Limits
-              </button>
-            </div>
-          ))}
+                {plan.slug === 'pro' && (
+                  <span className="inline-flex self-start items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 mb-3">
+                    Popular
+                  </span>
+                )}
+                <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
+
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-gray-900">{formatPrice(perMonth)}</span>
+                  {price > 0 && <span className="text-sm text-gray-500 ml-1">/month</span>}
+                  {billingCycle === 'yearly' && price > 0 && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {formatPrice(price)} billed yearly
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 mb-4 text-sm text-gray-600">
+                  <Users className="w-4 h-4 text-gray-400" />
+                  <span>{plan.maxUsers ? `Up to ${plan.maxUsers} users` : 'Unlimited users'}</span>
+                </div>
+
+                <button
+                  onClick={() => handleViewLimits(plan)}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition mt-auto"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Limits
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -230,10 +202,7 @@ export default function PlansPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Feature Comparison</h2>
-            <button
-              onClick={() => setShowComparison(false)}
-              className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 transition"
-            >
+            <button onClick={() => setShowComparison(false)} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 transition">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -247,12 +216,8 @@ export default function PlansPage() {
                 <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
                   <tr>
                     <th className="px-6 py-3">Feature</th>
-                    {Object.keys(
-                      (Object.values(comparison)[0] as Record<string, unknown>) || {}
-                    ).map((planName) => (
-                      <th key={planName} className="px-6 py-3">
-                        {planName}
-                      </th>
+                    {Object.keys((Object.values(comparison)[0] as Record<string, unknown>) || {}).map((planName) => (
+                      <th key={planName} className="px-6 py-3">{planName}</th>
                     ))}
                   </tr>
                 </thead>
@@ -260,21 +225,15 @@ export default function PlansPage() {
                   {Object.entries(comparison).map(([feature, planValues]) => (
                     <tr key={feature} className="hover:bg-gray-50 transition">
                       <td className="px-6 py-3 font-medium text-gray-900">{feature}</td>
-                      {Object.values(planValues as Record<string, unknown>).map(
-                        (val, idx) => (
-                          <td key={idx} className="px-6 py-3 text-gray-700">
-                            {typeof val === 'boolean' ? (
-                              val ? (
-                                <Check className="h-4 w-4 text-green-500" />
-                              ) : (
-                                <X className="h-4 w-4 text-red-400" />
-                              )
-                            ) : (
-                              String(val)
-                            )}
-                          </td>
-                        )
-                      )}
+                      {Object.values(planValues as Record<string, unknown>).map((val, idx) => (
+                        <td key={idx} className="px-6 py-3 text-gray-700">
+                          {typeof val === 'boolean' ? (
+                            val ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-red-400" />
+                          ) : (
+                            String(val)
+                          )}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
@@ -286,155 +245,14 @@ export default function PlansPage() {
         </div>
       )}
 
-      {/* Check Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Check Feature Access */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Check Feature Access</h2>
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={featureOrgId}
-              onChange={(e) => setFeatureOrgId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Org ID"
-            />
-            <input
-              type="text"
-              value={featureAppSlug}
-              onChange={(e) => setFeatureAppSlug(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="App Slug"
-            />
-            <input
-              type="text"
-              value={featureName}
-              onChange={(e) => setFeatureName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Feature"
-            />
-            <button
-              onClick={handleCheckFeature}
-              disabled={featureLoading || !featureOrgId || !featureAppSlug || !featureName}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {featureLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              Check
-            </button>
-            {featureResult && (
-              <div
-                className={`rounded-lg p-3 text-sm font-medium ${
-                  featureResult.hasAccess
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-red-50 text-red-700'
-                }`}
-              >
-                {featureResult.hasAccess ? 'Allowed' : 'Denied'}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Check Quota */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Check Quota</h2>
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={quotaOrgId}
-              onChange={(e) => setQuotaOrgId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Org ID"
-            />
-            <input
-              type="text"
-              value={quotaAppSlug}
-              onChange={(e) => setQuotaAppSlug(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="App Slug"
-            />
-            <input
-              type="text"
-              value={quotaLimitKey}
-              onChange={(e) => setQuotaLimitKey(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Limit Key"
-            />
-            <button
-              onClick={handleCheckQuota}
-              disabled={quotaLoading || !quotaOrgId || !quotaAppSlug || !quotaLimitKey}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {quotaLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              Check Quota
-            </button>
-            {quotaResult && (
-              <div
-                className={`rounded-lg p-3 text-sm font-medium ${
-                  quotaResult.withinQuota
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-red-50 text-red-700'
-                }`}
-              >
-                {quotaResult.withinQuota ? 'Within Quota' : 'Quota Exceeded'}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Check Seat Limit */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Check Seat Limit</h2>
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={seatOrgId}
-              onChange={(e) => setSeatOrgId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Org ID"
-            />
-            <input
-              type="text"
-              value={seatAppSlug}
-              onChange={(e) => setSeatAppSlug(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="App Slug"
-            />
-            <button
-              onClick={handleCheckSeat}
-              disabled={seatLoading || !seatOrgId || !seatAppSlug}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {seatLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              Check Seat Limit
-            </button>
-            {seatResult && (
-              <div
-                className={`rounded-lg p-3 text-sm font-medium ${
-                  seatResult.withinLimit
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-red-50 text-red-700'
-                }`}
-              >
-                {seatResult.withinLimit ? 'Within Seat Limit' : 'Seat Limit Exceeded'}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* View Limits Modal */}
       {showLimitsModal && limitsTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Limits - {limitsTarget.name}
-              </h2>
-              <button
-                onClick={() => { setShowLimitsModal(false); setLimitsTarget(null); setLimits([]); }}
-                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 transition"
-              >
+              <h2 className="text-lg font-semibold text-gray-900">Limits - {limitsTarget.name}</h2>
+              <button onClick={() => { setShowLimitsModal(false); setLimitsTarget(null); setLimits([]); }}
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 transition">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -443,23 +261,43 @@ export default function PlansPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             ) : limits.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">No limits defined.</p>
+              <p className="text-sm text-gray-500 text-center py-8">No limits defined for this plan.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
                     <tr>
                       <th className="px-4 py-3">Limit Key</th>
-                      <th className="px-4 py-3">Limit Value</th>
-                      <th className="px-4 py-3">Description</th>
+                      <th className="px-4 py-3">Value</th>
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Reset</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {limits.map((lim, idx) => (
                       <tr key={idx} className="hover:bg-gray-50 transition">
-                        <td className="px-4 py-3 font-medium text-gray-900">{lim.key}</td>
-                        <td className="px-4 py-3 text-gray-700">{lim.limit}</td>
-                        <td className="px-4 py-3 text-gray-500">{lim.description}</td>
+                        <td className="px-4 py-3 font-medium text-gray-900">{lim.limitKey}</td>
+                        <td className="px-4 py-3">
+                          {lim.limitType === 'feature' ? (
+                            lim.limitValue ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Enabled</span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Disabled</span>
+                            )
+                          ) : (
+                            <span className="font-semibold text-gray-900">{lim.limitValue}</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            lim.limitType === 'feature' ? 'bg-purple-100 text-purple-700' :
+                            lim.limitType === 'quota' ? 'bg-blue-100 text-blue-700' :
+                            'bg-orange-100 text-orange-700'
+                          }`}>
+                            {lim.limitType}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 capitalize">{lim.resetPeriod}</td>
                       </tr>
                     ))}
                   </tbody>

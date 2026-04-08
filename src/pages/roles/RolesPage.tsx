@@ -24,7 +24,7 @@ type ActiveTab = "roles" | "assign" | "lookup" | "permissions";
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
-  const [prefix, setPrefix] = useState("");
+  const APP_PREFIX = "books";
   const [rolesLoading, setRolesLoading] = useState(false);
   const [rolesError, setRolesError] = useState("");
 
@@ -44,7 +44,7 @@ export default function RolesPage() {
   const [assignError, setAssignError] = useState("");
 
   const [lookupUserId, setLookupUserId] = useState("");
-  const [lookupAppSlug, setLookupAppSlug] = useState("");
+  const [lookupAppSlug, setLookupAppSlug] = useState("books");
   const [lookupRoles, setLookupRoles] = useState<Role[]>([]);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
@@ -57,11 +57,11 @@ export default function RolesPage() {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("roles");
 
-  const fetchRoles = async (filterPrefix?: string) => {
+  const fetchRoles = async () => {
     setRolesLoading(true);
     setRolesError("");
     try {
-      const res = await listRoles(filterPrefix || undefined);
+      const res = await listRoles(APP_PREFIX);
       setRoles(extractArray<Role>(res));
     } catch {
       setRolesError("Failed to load roles.");
@@ -73,10 +73,6 @@ export default function RolesPage() {
   useEffect(() => {
     fetchRoles();
   }, []);
-
-  const handlePrefixSearch = () => {
-    fetchRoles(prefix);
-  };
 
   const openPermissionsModal = async (role: Role) => {
     setModalRole(role);
@@ -150,7 +146,9 @@ export default function RolesPage() {
     setPermError("");
     try {
       const res = await listAllPermissions(mod || undefined);
-      setAllPermissions(extractArray<Permission>(res));
+      const perms = extractArray<Permission>(res);
+      // Only show books-related permissions
+      setAllPermissions(perms.filter(p => p.slug?.startsWith('books.')));
     } catch {
       setPermError("Failed to load permissions.");
     } finally {
@@ -160,13 +158,12 @@ export default function RolesPage() {
 
   useEffect(() => {
     if (activeTab === "permissions") {
-      fetchAllPermissions(permModule);
+      fetchAllPermissions();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const handlePermModuleSearch = () => {
-    fetchAllPermissions(permModule);
+    fetchAllPermissions(permModule || undefined);
   };
 
   const actionColor = (action: string) => {
@@ -223,25 +220,7 @@ export default function RolesPage() {
       {/* ===== ROLES TAB ===== */}
       {activeTab === "roles" && (
         <div>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Filter by prefix (e.g. books)"
-                value={prefix}
-                onChange={(e) => setPrefix(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handlePrefixSearch()}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-            <button
-              onClick={handlePrefixSearch}
-              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Filter
-            </button>
-          </div>
+          {/* Roles are filtered to books app via API: /api/roles?prefix=books */}
 
           {rolesLoading && (
             <div className="flex items-center justify-center py-12">
