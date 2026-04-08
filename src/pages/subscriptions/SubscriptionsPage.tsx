@@ -60,7 +60,6 @@ export default function SubscriptionsPage() {
         s.app?.slug === 'books' ||
         s.appId === 'be51509b-742b-4e58-a5ba-36808a6106a1'
       );
-      console.log('All subs:', allSubs, 'Books subs:', booksSubs);
       setSubscriptions(booksSubs);
     } catch {
       setError('Failed to load subscriptions.');
