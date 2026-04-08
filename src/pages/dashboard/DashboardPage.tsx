@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Users, Building2, AppWindow, CreditCard, BarChart3, TrendingUp, Shield, Package } from 'lucide-react';
+import { Users, Building2, CreditCard, BarChart3, TrendingUp, Shield, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { extractArray } from '../../api/helpers';
-import { listApps } from '../../api/apps';
 import { listOrganizations } from '../../api/organizations';
 import { getOrgSubscriptions } from '../../api/subscriptions';
 import { listOrgUsers } from '../../api/users';
-import { listRoles } from '../../api/roles';
+import { listRoles, getUserRolesForApp } from '../../api/roles';
 import { listPlans } from '../../api/plans';
 import { getOrgUsage } from '../../api/usage';
 
@@ -24,7 +23,6 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    apps: 0,
     orgs: 0,
     users: 0,
     roles: 0,
@@ -41,13 +39,12 @@ export default function DashboardPage() {
       const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
       const results = await Promise.allSettled([
-        listApps(),
         listOrganizations(),
         orgId ? listOrgUsers(orgId) : Promise.resolve(null),
-        listRoles(),
+        listRoles('books'),
         orgId ? getOrgSubscriptions(orgId) : Promise.resolve(null),
-        listPlans(),
-        orgId ? getOrgUsage(orgId, undefined, period) : Promise.resolve(null),
+        listPlans('books'),
+        orgId ? getOrgUsage(orgId, 'books', period) : Promise.resolve(null),
       ]);
 
       const getCount = (result: PromiseSettledResult<any>) => {
@@ -63,14 +60,39 @@ export default function DashboardPage() {
         return 0;
       };
 
+      // Count users with books roles
+      let booksUserCount = 0;
+      if (results[1].status === 'fulfilled' && results[1].value) {
+        const allUsers = extractArray<any>(results[1].value);
+        const roleChecks = await Promise.all(
+          allUsers.map(async (u: any) => {
+            try {
+              const rolesRes = await getUserRolesForApp(u.id, 'books');
+              return extractArray(rolesRes).length > 0;
+            } catch {
+              return false;
+            }
+          })
+        );
+        booksUserCount = roleChecks.filter(Boolean).length;
+      }
+
+      // Count subscriptions for books only
+      let booksSubsCount = 0;
+      if (results[3].status === 'fulfilled' && results[3].value) {
+        const allSubs = extractArray<any>(results[3].value);
+        booksSubsCount = allSubs.filter((s: any) =>
+          s.appSlug === 'books' || s.app?.slug === 'books'
+        ).length;
+      }
+
       setStats({
-        apps: getCount(results[0]),
-        orgs: getCount(results[1]),
-        users: getCount(results[2]),
-        roles: getCount(results[3]),
-        subscriptions: getCount(results[4]),
-        plans: getCount(results[5]),
-        usage: getCount(results[6]),
+        orgs: getCount(results[0]),
+        users: booksUserCount,
+        roles: getCount(results[2]),
+        subscriptions: booksSubsCount,
+        plans: getCount(results[4]),
+        usage: getCount(results[5]),
       });
       setLoading(false);
     };
@@ -79,14 +101,6 @@ export default function DashboardPage() {
   }, [user?.orgId]);
 
   const cards: StatCard[] = [
-    {
-      label: 'Active Apps',
-      count: stats.apps,
-      icon: <AppWindow className="w-6 h-6" />,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-      path: '/apps',
-    },
     {
       label: 'Organizations',
       count: stats.orgs,
@@ -141,7 +155,8 @@ export default function DashboardPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user?.firstName || 'User'}!
+          {/* Welcome back, {user?.firstName || 'User'}! */}
+          Welcome back
         </h1>
         <p className="text-gray-500 mt-1">Here's an overview of your platform.</p>
       </div>
