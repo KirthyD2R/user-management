@@ -51,7 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login(email, password);
-    const { accessToken: token, refreshToken, user: userData } = response.data;
+    // response is already response.data from axios, so data is at response.data
+    const loginData = response.data || response;
+    const { accessToken: token, refreshToken, user: userData } = loginData;
 
     localStorage.setItem('accessToken', token);
     localStorage.setItem('refreshToken', refreshToken);

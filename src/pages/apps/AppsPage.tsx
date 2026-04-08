@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, X } from 'lucide-react';
 import { listApps, createApp, updateApp } from '../../api/apps';
+import { extractArray } from '../../api/helpers';
 import { App } from '../../types';
 
 interface AppFormData {
@@ -46,11 +47,7 @@ function AppsPage() {
     setError(null);
     try {
       const response = await listApps();
-      if (response.success) {
-        setApps(response.data);
-      } else {
-        setError(response.message || 'Failed to load apps');
-      }
+      setApps(extractArray<App>(response));
     } catch {
       setError('Failed to load apps');
     } finally {

@@ -17,6 +17,7 @@ import {
   getUserRolesForApp,
   listAllPermissions,
 } from "../../api/roles";
+import { extractArray } from "../../api/helpers";
 import { Role, Permission } from "../../types";
 
 type ActiveTab = "roles" | "assign" | "lookup" | "permissions";
@@ -61,7 +62,7 @@ export default function RolesPage() {
     setRolesError("");
     try {
       const res = await listRoles(filterPrefix || undefined);
-      setRoles(res.data);
+      setRoles(extractArray<Role>(res));
     } catch {
       setRolesError("Failed to load roles.");
     } finally {
@@ -83,7 +84,7 @@ export default function RolesPage() {
     setModalLoading(true);
     try {
       const res = await getRolePermissions(role.id);
-      setModalPermissions(res.data);
+      setModalPermissions(extractArray<Permission>(res));
     } catch {
       setModalPermissions([]);
     } finally {
@@ -135,7 +136,7 @@ export default function RolesPage() {
     setLookupDone(false);
     try {
       const res = await getUserRolesForApp(lookupUserId, lookupAppSlug);
-      setLookupRoles(res.data);
+      setLookupRoles(extractArray<Role>(res));
       setLookupDone(true);
     } catch {
       setLookupError("Failed to look up user roles.");
@@ -149,7 +150,7 @@ export default function RolesPage() {
     setPermError("");
     try {
       const res = await listAllPermissions(mod || undefined);
-      setAllPermissions(res.data);
+      setAllPermissions(extractArray<Permission>(res));
     } catch {
       setPermError("Failed to load permissions.");
     } finally {

@@ -15,6 +15,7 @@ import {
   getOrgStats,
   updateOrgStatus,
 } from "../../api/organizations";
+import { extractArray, extractData, extractPagination } from "../../api/helpers";
 import { Organization } from "../../types";
 
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
@@ -99,10 +100,9 @@ const OrganizationsPage: React.FC = () => {
     setError(null);
     try {
       const res = await listOrganizations(page, LIMIT);
-      setOrgs(res.data);
-      if (res.pagination) {
-        setTotalPages(res.pagination.totalPages);
-      }
+      setOrgs(extractArray<Organization>(res));
+      const pagination = extractPagination(res);
+      setTotalPages(pagination.totalPages);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to fetch organizations";
       setError(message);
@@ -170,7 +170,7 @@ const OrganizationsPage: React.FC = () => {
     setShowStatsModal(true);
     try {
       const res = await getOrgStats(org.id);
-      setStats(res.data);
+      setStats(extractData<Record<string, unknown>>(res));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to fetch stats";
       setError(message);

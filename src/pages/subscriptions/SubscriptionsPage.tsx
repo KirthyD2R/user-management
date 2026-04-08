@@ -8,6 +8,7 @@ import {
   changeStatus,
   checkAccess,
 } from '../../api/subscriptions';
+import { extractArray, extractData } from '../../api/helpers';
 import { Subscription } from '../../types';
 
 export default function SubscriptionsPage() {
@@ -52,9 +53,7 @@ export default function SubscriptionsPage() {
     setError('');
     try {
       const res = await getOrgSubscriptions(orgId);
-      if (res.success) {
-        setSubscriptions(res.data);
-      }
+      setSubscriptions(extractArray<Subscription>(res));
     } catch {
       setError('Failed to load subscriptions.');
     } finally {
@@ -112,9 +111,7 @@ export default function SubscriptionsPage() {
     setAccessResult(null);
     try {
       const res = await checkAccess(accessOrgId, accessAppSlug);
-      if (res.success) {
-        setAccessResult(res.data);
-      }
+      setAccessResult(extractData<{ hasAccess: boolean }>(res));
     } catch {
       setError('Failed to check access.');
     } finally {

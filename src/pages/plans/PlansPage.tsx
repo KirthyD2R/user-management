@@ -8,6 +8,7 @@ import {
   checkQuota,
   checkSeatLimit,
 } from '../../api/plans';
+import { extractArray, extractData } from '../../api/helpers';
 import { Plan, PlanLimit } from '../../types';
 
 export default function PlansPage() {
@@ -56,9 +57,7 @@ export default function PlansPage() {
     setError('');
     try {
       const res = await listPlans(appSlug);
-      if (res.success) {
-        setPlans(res.data);
-      }
+      setPlans(extractArray<Plan>(res));
     } catch {
       setError('Failed to load plans.');
     } finally {
@@ -72,9 +71,7 @@ export default function PlansPage() {
     setLimitsLoading(true);
     try {
       const res = await getPlanLimits(plan.slug, appSlug);
-      if (res.success) {
-        setLimits(res.data);
-      }
+      setLimits(extractArray<PlanLimit>(res));
     } catch {
       setError('Failed to load plan limits.');
     } finally {
@@ -87,9 +84,7 @@ export default function PlansPage() {
     setShowComparison(true);
     try {
       const res = await getFeatureComparison(appSlug);
-      if (res.success) {
-        setComparison(res.data);
-      }
+      setComparison(extractData<Record<string, unknown>>(res));
     } catch {
       setError('Failed to load feature comparison.');
     } finally {

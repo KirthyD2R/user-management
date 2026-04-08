@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Pencil, Power, AppWindow, Search, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { listOrgUsers, lookupUser, inviteUser, updateUser, toggleUserStatus, getUserApps } from '../../api/users';
+import { extractArray, extractData, extractPagination } from '../../api/helpers';
 import { User, App } from '../../types';
 
 const LIMIT = 10;
@@ -41,8 +42,9 @@ export default function UsersPage() {
     setError('');
     try {
       const res = await listOrgUsers(orgId, page, LIMIT);
-      setUsers(res.data);
-      setTotalPages(res.pagination?.totalPages ?? 1);
+      setUsers(extractArray<User>(res));
+      const pagination = extractPagination(res);
+      setTotalPages(pagination.totalPages ?? 1);
     } catch {
       setError('Failed to load users.');
     } finally {
@@ -63,7 +65,8 @@ export default function UsersPage() {
     setError('');
     try {
       const res = await lookupUser(searchQuery.trim());
-      setUsers(res.data ? [res.data] : []);
+      const found = extractData<User>(res);
+      setUsers(found ? [found] : []);
       setTotalPages(1);
       setPage(1);
     } catch {
@@ -120,7 +123,7 @@ export default function UsersPage() {
     setError('');
     try {
       const res = await getUserApps(u.id);
-      setUserApps(res.data);
+      setUserApps(extractArray<App>(res));
       setShowAppsModal(true);
     } catch {
       setError('Failed to load user apps.');
