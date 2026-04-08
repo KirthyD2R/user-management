@@ -1,0 +1,1965 @@
+{
+  "info": {
+    "_postman_id": "2832d009-a135-48eb-98b8-159af3e6ba9f",
+    "name": "Dream Platform Central API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "28915656",
+    "_collection_link": "https://go.postman.co/collection/28915656-2832d009-a135-48eb-98b8-159af3e6ba9f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test1234!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"orgName\": \"Test Org\",\n  \"orgSlug\": \"test-org\",\n  \"appSlug\": \"books\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "  pm.collectionVariables.set('userId', json.data.user.id);",
+                  "  pm.collectionVariables.set('orgId', json.data.user.orgId);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"sneka.muniyasamy@d2railabs.com\",\r\n    \"password\": \"Admin@123\"\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"your-verification-token\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-email"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"your-reset-token\",\n  \"newPassword\": \"NewPass1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Apps",
+      "item": [
+        {
+          "name": "List Apps",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjZDQzZWIxZi0zMzQ5LTQ1MTItOTU2ZS01NzkwZGI3OTY3NWIiLCJvcmdJZCI6ImJiNmMwYzhmLThmNDUtNDU4Ny1hN2RhLTAxYWZlODJmZDcyZSIsImVtYWlsIjoic25la2EubXVuaXlhc2FteUBkMnJhaWxhYnMuY29tIiwiaWF0IjoxNzc1MTkxOTE0LCJleHAiOjE3NzUyNzgzMTR9.4MIm5R9clnOwkHF_RTfMIOnJ09LS_P6F74uDwXQowYc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/apps?isActive=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apps"
+              ],
+              "query": [
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create App",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"new-app\",\n  \"name\": \"New App\",\n  \"description\": \"A new platform app\",\n  \"baseUrl\": \"https://new-app.vercel.app\",\n  \"limitModel\": \"seat\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/apps",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apps"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get App by Slug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/apps/books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apps",
+                "books"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update App",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dream Books\",\n  \"description\": \"AI-First Accounting Platform\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/apps/books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apps",
+                "books"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Organisations",
+      "item": [
+        {
+          "name": "List Organisations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/organisations?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organisations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Organisation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp\",\n  \"slug\": \"acme-corp\",\n  \"email\": \"admin@acme.com\",\n  \"phone\": \"+91-9876543210\",\n  \"industry\": \"Technology\",\n  \"companySize\": \"50-100\",\n  \"address\": \"123 MG Road\",\n  \"city\": \"Bangalore\",\n  \"state\": \"Karnataka\",\n  \"country\": \"India\",\n  \"postalCode\": \"560001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organisations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organisations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Organisation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/organisations/{{orgId}}?fields=name,slug,logo,gstin,pan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organisations",
+                "{{orgId}}"
+              ],
+              "query": [
+                {
+                  "key": "fields",
+                  "value": "name,slug,logo,gstin,pan"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Organisation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp Updated\",\n  \"gstin\": \"29ABCDE1234F1Z5\",\n  \"pan\": \"ABCDE1234F\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"currency\": \"INR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organisations/{{orgId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organisations",
+                "{{orgId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Org Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/organisations/{{orgId}}/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organisations",
+                "{{orgId}}",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Org Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organisations/{{orgId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organisations",
+                "{{orgId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"kirthy.rajan@d2railabs.com\",\n    \"firstName\": \"Kirthy\",\n    \"lastName\": \"Rajan\",\n    \"orgId\": \"{{orgId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Lookup User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjZDQzZWIxZi0zMzQ5LTQ1MTItOTU2ZS01NzkwZGI3OTY3NWIiLCJvcmdJZCI6ImJiNmMwYzhmLThmNDUtNDU4Ny1hN2RhLTAxYWZlODJmZDcyZSIsImVtYWlsIjoic25la2EubXVuaXlhc2FteUBkMnJhaWxhYnMuY29tIiwiaWF0IjoxNzc1NDgyMzE5LCJleHAiOjE3NzU1Njg3MTl9.2gQthK1vSUo1hxzus3zJkyomOkJHiU3RskJ9hi2zaEc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/lookup?email=kirthy.rajan@d2railabs.com",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "lookup"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "kirthy.rajan@d2railabs.com"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Email",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjZDQzZWIxZi0zMzQ5LTQ1MTItOTU2ZS01NzkwZGI3OTY3NWIiLCJvcmdJZCI6ImJiNmMwYzhmLThmNDUtNDU4Ny1hN2RhLTAxYWZlODJmZDcyZSIsImVtYWlsIjoic25la2EubXVuaXlhc2FteUBkMnJhaWxhYnMuY29tIiwiaWF0IjoxNzc1Mjk3NzY3LCJleHAiOjE3NzUzODQxNjd9.x0fyExjShwgr84sdhfWvi0fzqkE4Teyn_7XL2rvsp2Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/check-email?email=kirthy.rajan@d2railabs.com&orgId={{orgId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "check-email"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "kirthy.rajan@d2railabs.com"
+                },
+                {
+                  "key": "orgId",
+                  "value": "{{orgId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}?fields=email,firstName,lastName,avatarUrl",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ],
+              "query": [
+                {
+                  "key": "fields",
+                  "value": "email,firstName,lastName,avatarUrl"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"phone\": \"+91-9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Org Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/org/{{orgId}}?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "org",
+                "{{orgId}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Apps",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/apps",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}",
+                "apps"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invite User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"kirthy.rajan@d2railabs.com\",\n  \"firstName\": \"Kirthy\",\n  \"lastName\": \"Rajan\",\n  \"orgId\": \"{{orgId}}\",\n  \"appSlug\": \"books\",\n  \"roleSlug\": \"books_admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/invite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "invite"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "sso login",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjZDQzZWIxZi0zMzQ5LTQ1MTItOTU2ZS01NzkwZGI3OTY3NWIiLCJvcmdJZCI6ImJiNmMwYzhmLThmNDUtNDU4Ny1hN2RhLTAxYWZlODJmZDcyZSIsImVtYWlsIjoic25la2EubXVuaXlhc2FteUBkMnJhaWxhYnMuY29tIiwiaWF0IjoxNzc1NDgyMzE5LCJleHAiOjE3NzU1Njg3MTl9.2gQthK1vSUo1hxzus3zJkyomOkJHiU3RskJ9hi2zaEc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"provider\": \"microsoft\",\r\n  \"email\": \"kirthy.rajan@d2railabs.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sso-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "sso-login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Roles and Permissions",
+      "item": [
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles?prefix=books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "books"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Role Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/3cf3a9e7-61e1-43d5-bc27-d605230695fb/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "3cf3a9e7-61e1-43d5-bc27-d605230695fb",
+                "permissions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"orgId\": \"{{orgId}}\",\n  \"appId\": \"APP_UUID_HERE\",\n  \"roleId\": \"ROLE_UUID_HERE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "assign"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Role Assignment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/assign/ASSIGNMENT_ID_HERE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "assign",
+                "ASSIGNMENT_ID_HERE"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Permission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/check?userId={{userId}}&appId=APP_UUID_HERE&orgId={{orgId}}&permission=invoices:create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "check"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "appId",
+                  "value": "APP_UUID_HERE"
+                },
+                {
+                  "key": "orgId",
+                  "value": "{{orgId}}"
+                },
+                {
+                  "key": "permission",
+                  "value": "invoices:create"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Roles for App",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/user/{{userId}}/app/books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "user",
+                "{{userId}}",
+                "app",
+                "books"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/permissions?module=invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "permissions"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "invoices"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Create Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orgId\": \"{{orgId}}\",\n  \"appId\": \"APP_UUID_HERE\",\n  \"planId\": \"PLAN_UUID_HERE\",\n  \"startDate\": \"2026-04-02\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Org Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions/org/{{orgId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "subscriptions",
+                "org",
+                "{{orgId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Plan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": \"NEW_PLAN_UUID\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions/SUBSCRIPTION_ID/plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "subscriptions",
+                "SUBSCRIPTION_ID",
+                "plan"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Subscription Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions/SUBSCRIPTION_ID/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "subscriptions",
+                "SUBSCRIPTION_ID",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Subscription Access",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/subscriptions/check?orgId={{orgId}}&appSlug=books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "subscriptions",
+                "check"
+              ],
+              "query": [
+                {
+                  "key": "orgId",
+                  "value": "{{orgId}}"
+                },
+                {
+                  "key": "appSlug",
+                  "value": "books"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Plans and Limits",
+      "item": [
+        {
+          "name": "List Plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans?appSlug=books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans"
+              ],
+              "query": [
+                {
+                  "key": "appSlug",
+                  "value": "books"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan Limits",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/free/limits?appSlug=books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans",
+                "free",
+                "limits"
+              ],
+              "query": [
+                {
+                  "key": "appSlug",
+                  "value": "books"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Feature Comparison",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/features?appSlug=books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans",
+                "features"
+              ],
+              "query": [
+                {
+                  "key": "appSlug",
+                  "value": "books"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Feature Access",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/check-feature?orgId={{orgId}}&appSlug=books&feature=advanced-reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans",
+                "check-feature"
+              ],
+              "query": [
+                {
+                  "key": "orgId",
+                  "value": "{{orgId}}"
+                },
+                {
+                  "key": "appSlug",
+                  "value": "books"
+                },
+                {
+                  "key": "feature",
+                  "value": "advanced-reports"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Quota",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/check-quota?orgId={{orgId}}&appSlug=books&limitKey=invoices-per-month",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans",
+                "check-quota"
+              ],
+              "query": [
+                {
+                  "key": "orgId",
+                  "value": "{{orgId}}"
+                },
+                {
+                  "key": "appSlug",
+                  "value": "books"
+                },
+                {
+                  "key": "limitKey",
+                  "value": "invoices-per-month"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Seat Limit",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/check-seat?orgId={{orgId}}&appSlug=books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans",
+                "check-seat"
+              ],
+              "query": [
+                {
+                  "key": "orgId",
+                  "value": "{{orgId}}"
+                },
+                {
+                  "key": "appSlug",
+                  "value": "books"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usage",
+      "item": [
+        {
+          "name": "Increment Usage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orgId\": \"{{orgId}}\",\n  \"appSlug\": \"books\",\n  \"usageKey\": \"invoices-created\",\n  \"incrementBy\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/usage/increment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usage",
+                "increment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Org Usage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usage/org/{{orgId}}?appSlug=books&period=2026-04",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usage",
+                "org",
+                "{{orgId}}"
+              ],
+              "query": [
+                {
+                  "key": "appSlug",
+                  "value": "books"
+                },
+                {
+                  "key": "period",
+                  "value": "2026-04"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check and Increment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orgId\": \"{{orgId}}\",\n  \"appSlug\": \"books\",\n  \"usageKey\": \"invoices-created\",\n  \"incrementBy\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/usage/check-and-increment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usage",
+                "check-and-increment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Usage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}"
+              },
+              {
+                "key": "X-App-Id",
+                "value": "{{appId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orgId\": \"{{orgId}}\",\n  \"appSlug\": \"books\",\n  \"usageKey\": \"invoices-created\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/usage/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usage",
+                "reset"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://dream-platform-api.vercel.app"
+    },
+    {
+      "key": "apiKey",
+      "value": "YOUR_API_KEY"
+    },
+    {
+      "key": "appId",
+      "value": "books"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "orgId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    }
+  ]
+}
