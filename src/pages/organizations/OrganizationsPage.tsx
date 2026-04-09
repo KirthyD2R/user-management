@@ -254,7 +254,7 @@ const OrganizationsPage: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {["Name", "Slug", "Email", "Industry", "Status", "Actions"].map((h) => (
+                {["Name", "Email", "Status", "Actions"].map((h) => (
                   <th
                     key={h}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -283,21 +283,12 @@ const OrganizationsPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {org.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{org.slug}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{org.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{org.industry}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={org.status} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openStats(org)}
-                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="View Stats"
-                        >
-                          <BarChart3 className="w-4 h-4" />
-                        </button>
                         <button
                           onClick={() => openEdit(org)}
                           className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -360,7 +351,16 @@ const OrganizationsPage: React.FC = () => {
             </div>
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {renderField("Name", "name")}
-              {renderField("Slug", "slug")}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                <input
+                  type="text"
+                  value={formData.slug || ''}
+                  readOnly
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                  placeholder="Auto-generated from name"
+                />
+              </div>
               {renderField("Email", "email")}
               {renderField("Phone", "phone")}
               {renderField("Industry", "industry")}
@@ -408,7 +408,16 @@ const OrganizationsPage: React.FC = () => {
             </div>
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {renderField("Name", "name")}
-              {renderField("Slug", "slug")}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                <input
+                  type="text"
+                  value={formData.slug || ''}
+                  readOnly
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                  placeholder="Auto-generated from name"
+                />
+              </div>
               {renderField("Email", "email")}
               {renderField("Phone", "phone")}
               {renderField("Industry", "industry")}

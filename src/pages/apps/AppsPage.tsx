@@ -199,57 +199,6 @@ export default function AppsPage() {
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
       )}
 
-      {/* App Details Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <Tag className="w-4 h-4" />
-            Slug
-          </div>
-          <p className="text-lg font-semibold text-gray-900">{app?.slug}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <Globe className="w-4 h-4" />
-            Base URL
-          </div>
-          <p className="text-lg font-semibold text-gray-900 truncate">{app?.baseUrl || '—'}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <Settings className="w-4 h-4" />
-            Limit Model
-          </div>
-          <p className="text-lg font-semibold text-gray-900 capitalize">{app?.limitModel}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            Status
-          </div>
-          {app?.isActive ? (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-              Active
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-              Inactive
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Description */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-sm font-medium text-gray-500 mb-2">Description</h2>
-        <p className="text-gray-900">{app?.description || 'No description provided.'}</p>
-      </div>
-
-      {/* App ID */}
-      <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-sm font-medium text-gray-500 mb-2">App ID</h2>
-        <code className="text-sm bg-gray-100 px-3 py-1.5 rounded-lg text-gray-700 select-all">{app?.id}</code>
-      </div>
-
       {/* App Users */}
       <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">

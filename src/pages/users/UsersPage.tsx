@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Pencil, Power, AppWindow, Search, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Power, AppWindow, Search, X, Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { listOrgUsers, lookupUser, inviteUser, updateUser, toggleUserStatus, getUserApps } from '../../api/users';
-import { getUserRolesForApp } from '../../api/roles';
+import { listOrgUsers, lookupUser, inviteUser, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
+import { getUserRolesForApp, listRoles } from '../../api/roles';
+import { listOrganizations } from '../../api/organizations';
 import { extractArray, extractData, extractPagination } from '../../api/helpers';
-import { User, App } from '../../types';
+import { User, App, Role } from '../../types';
 
 const LIMIT = 10;
 
@@ -36,6 +37,24 @@ export default function UsersPage() {
 
   const [showAppsModal, setShowAppsModal] = useState(false);
   const [userApps, setUserApps] = useState<App[]>([]);
+
+  // Dropdowns data
+  const [orgs, setOrgs] = useState<{ id: string; name: string }[]>([]);
+  const [roles, setRoles] = useState<{ slug: string; name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const [orgsRes, rolesRes] = await Promise.all([
+          listOrganizations(),
+          listRoles('books'),
+        ]);
+        setOrgs(extractArray<{ id: string; name: string }>(orgsRes));
+        setRoles(extractArray<{ slug: string; name: string }>(rolesRes));
+      } catch { /* ignore */ }
+    };
+    fetchDropdownData();
+  }, []);
 
   const fetchUsers = useCallback(async () => {
     if (!orgId) return;
@@ -136,6 +155,17 @@ export default function UsersPage() {
     }
   };
 
+  const handleDelete = async (u: User) => {
+    if (!confirm(`Delete user ${u.firstName} ${u.lastName}? This cannot be undone.`)) return;
+    setError('');
+    try {
+      await deleteUser(u.id);
+      fetchUsers();
+    } catch {
+      setError('Failed to delete user.');
+    }
+  };
+
   const openApps = async (u: User) => {
     setSelectedUser(u);
     setError('');
@@ -211,7 +241,6 @@ export default function UsersPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -242,9 +271,6 @@ export default function UsersPage() {
                       {u.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {new Date(u.createdAt).toLocaleDateString()}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center gap-2">
                       <button
@@ -264,13 +290,6 @@ export default function UsersPage() {
                         title={u.isActive ? 'Deactivate' : 'Activate'}
                       >
                         <Power className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => openApps(u)}
-                        className="p-1.5 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                        title="View Apps"
-                      >
-                        <AppWindow className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -345,32 +364,29 @@ export default function UsersPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Organization ID</label>
-                <input
-                  type="text"
-                  value={inviteForm.orgId}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                <select
+                  value={inviteForm.orgId || orgId || ''}
                   onChange={(e) => setInviteForm({ ...inviteForm, orgId: e.target.value })}
-                  placeholder={orgId}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                >
+                  {orgs.map((o) => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">App Slug</label>
-                <input
-                  type="text"
-                  value={inviteForm.appSlug}
-                  onChange={(e) => setInviteForm({ ...inviteForm, appSlug: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role Slug</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select
                   value={inviteForm.roleSlug}
                   onChange={(e) => setInviteForm({ ...inviteForm, roleSlug: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                >
+                  <option value="">Select a role</option>
+                  {roles.map((r) => (
+                    <option key={r.slug} value={r.slug}>{r.name}</option>
+                  ))}
+                </select>
               </div>
               <button
                 onClick={handleInvite}

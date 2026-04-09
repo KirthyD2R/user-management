@@ -17,16 +17,28 @@ import {
   getUserRolesForApp,
   listAllPermissions,
 } from "../../api/roles";
-import { extractArray } from "../../api/helpers";
+import { listOrganizations } from "../../api/organizations";
+import { listOrgUsers } from "../../api/users";
+import { getApp } from "../../api/apps";
+import { useAuth } from "../../contexts/AuthContext";
+import { extractArray, extractData } from "../../api/helpers";
+import { useToast } from "../../components/Toast";
 import { Role, Permission } from "../../types";
 
 type ActiveTab = "roles" | "assign" | "lookup" | "permissions";
 
 export default function RolesPage() {
+  const { user: authUser } = useAuth();
+  const { showToast } = useToast();
   const [roles, setRoles] = useState<Role[]>([]);
   const APP_PREFIX = "books";
   const [rolesLoading, setRolesLoading] = useState(false);
   const [rolesError, setRolesError] = useState("");
+
+  // Dropdown data
+  const [orgs, setOrgs] = useState<{ id: string; name: string }[]>([]);
+  const [users, setUsers] = useState<{ id: string; firstName: string; lastName: string; email: string }[]>([]);
+  const [booksAppId, setBooksAppId] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalRole, setModalRole] = useState<Role | null>(null);
@@ -44,7 +56,7 @@ export default function RolesPage() {
   const [assignError, setAssignError] = useState("");
 
   const [lookupUserId, setLookupUserId] = useState("");
-  const [lookupAppSlug, setLookupAppSlug] = useState("books");
+  const lookupAppSlug = "books";
   const [lookupRoles, setLookupRoles] = useState<Role[]>([]);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
@@ -72,7 +84,34 @@ export default function RolesPage() {
 
   useEffect(() => {
     fetchRoles();
+    fetchDropdownData();
   }, []);
+
+  const fetchDropdownData = async () => {
+    try {
+      const [orgsRes, appRes] = await Promise.all([
+        listOrganizations(),
+        getApp('books'),
+      ]);
+      setOrgs(extractArray<{ id: string; name: string }>(orgsRes));
+      const appData = extractData<any>(appRes);
+      if (appData?.id) setBooksAppId(appData.id);
+
+      // Load users from current org
+      if (authUser?.orgId) {
+        fetchOrgUsers(authUser.orgId);
+      }
+    } catch { /* ignore */ }
+  };
+
+  // Fetch users when org changes in assign form
+  const fetchOrgUsers = async (orgId: string) => {
+    if (!orgId) { setUsers([]); return; }
+    try {
+      const res = await listOrgUsers(orgId, 1, 100);
+      setUsers(extractArray<any>(res));
+    } catch { setUsers([]); }
+  };
 
   const openPermissionsModal = async (role: Role) => {
     setModalRole(role);
@@ -113,29 +152,32 @@ export default function RolesPage() {
     setAssignMessage("");
     try {
       await assignRole(assignForm);
-      setAssignMessage("Role assigned successfully.");
-      setAssignForm({ userId: "", orgId: "", appId: "", roleId: "" });
-    } catch {
-      setAssignError("Failed to assign role.");
+      showToast("Role assigned successfully!", "success");
+      setAssignForm({ userId: "", orgId: "", appId: booksAppId, roleId: "" });
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message || err?.response?.data?.message || "Failed to assign role.";
+      showToast(msg, "error");
     } finally {
       setAssignLoading(false);
     }
   };
 
   const handleLookup = async () => {
-    if (!lookupUserId || !lookupAppSlug) {
-      setLookupError("Both User ID and App Slug are required.");
+    if (!lookupUserId) {
+      showToast("Please select a user.", "error");
       return;
     }
     setLookupLoading(true);
     setLookupError("");
     setLookupDone(false);
     try {
-      const res = await getUserRolesForApp(lookupUserId, lookupAppSlug);
-      setLookupRoles(extractArray<Role>(res));
+      const res: any = await getUserRolesForApp(lookupUserId, lookupAppSlug);
+      const rolesArr = res?.data?.roles ?? extractArray<any>(res);
+      setLookupRoles(rolesArr);
       setLookupDone(true);
-    } catch {
-      setLookupError("Failed to look up user roles.");
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message || err?.response?.data?.message || "Failed to look up user roles.";
+      showToast(msg, "error");
     } finally {
       setLookupLoading(false);
     }
@@ -274,34 +316,35 @@ export default function RolesPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">User ID</label>
-              <input
-                type="text"
-                placeholder="Enter user ID"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+              <select
+                value={assignForm.orgId}
+                onChange={(e) => {
+                  const orgId = e.target.value;
+                  setAssignForm({ ...assignForm, orgId, userId: '', appId: booksAppId });
+                  fetchOrgUsers(orgId);
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+              >
+                <option value="">Select an organization</option>
+                {orgs.map((o) => (
+                  <option key={o.id} value={o.id}>{o.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">User</label>
+              <select
                 value={assignForm.userId}
                 onChange={(e) => setAssignForm({ ...assignForm, userId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Organization ID</label>
-              <input
-                type="text"
-                placeholder="Enter org ID"
-                value={assignForm.orgId}
-                onChange={(e) => setAssignForm({ ...assignForm, orgId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">App ID</label>
-              <input
-                type="text"
-                placeholder="Enter app ID"
-                value={assignForm.appId}
-                onChange={(e) => setAssignForm({ ...assignForm, appId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
+                disabled={!assignForm.orgId}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="">{assignForm.orgId ? 'Select a user' : 'Select an org first'}</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -355,24 +398,17 @@ export default function RolesPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">User ID</label>
-              <input
-                type="text"
-                placeholder="Enter user ID"
+              <label className="block text-sm font-medium text-gray-700 mb-1">User</label>
+              <select
                 value={lookupUserId}
                 onChange={(e) => setLookupUserId(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">App Slug</label>
-              <input
-                type="text"
-                placeholder="Enter app slug"
-                value={lookupAppSlug}
-                onChange={(e) => setLookupAppSlug(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+              >
+                <option value="">Select a user</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
+                ))}
+              </select>
             </div>
 
             {lookupError && (
@@ -397,19 +433,19 @@ export default function RolesPage() {
 
             {lookupDone && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">
+                <p className="text-sm font-medium text-gray-700 mb-3">
                   Roles ({lookupRoles.length})
                 </p>
                 {lookupRoles.length === 0 ? (
                   <p className="text-sm text-gray-400">No roles found for this user/app.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {lookupRoles.map((r) => (
+                    {lookupRoles.map((r: any) => (
                       <span
-                        key={r.id}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700"
+                        key={r.roleId || r.id}
+                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700"
                       >
-                        {r.name}
+                        {r.roleName || r.name || r.roleSlug || r.slug}
                       </span>
                     ))}
                   </div>

@@ -54,12 +54,7 @@ export default function SubscriptionsPage() {
     try {
       const res = await getOrgSubscriptions(orgId);
       const allSubs = extractArray<any>(res);
-      // Filter to only books app subscriptions
-      const booksSubs = allSubs.filter((s: any) =>
-        s.appSlug === 'books' ||
-        s.app?.slug === 'books' ||
-        s.appId === 'be51509b-742b-4e58-a5ba-36808a6106a1'
-      );
+      const booksSubs = allSubs.filter((s: any) => s.app?.slug === 'books');
       setSubscriptions(booksSubs);
     } catch {
       setError('Failed to load subscriptions.');
@@ -171,21 +166,21 @@ export default function SubscriptionsPage() {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
                 <tr>
-                  <th className="px-6 py-3">Organization</th>
                   <th className="px-6 py-3">App</th>
                   <th className="px-6 py-3">Plan</th>
+                  <th className="px-6 py-3">Max Users</th>
                   <th className="px-6 py-3">Status</th>
                   <th className="px-6 py-3">Start Date</th>
-                  <th className="px-6 py-3">End Date</th>
+                  <th className="px-6 py-3">Expires</th>
                   <th className="px-6 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {subscriptions.map((sub) => (
                   <tr key={sub.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-medium text-gray-900">{sub.orgId}</td>
-                    <td className="px-6 py-4 text-gray-700">{sub.appId}</td>
-                    <td className="px-6 py-4 text-gray-700">{sub.planId}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{sub.app?.name || sub.appSlug || '-'}</td>
+                    <td className="px-6 py-4 text-gray-700">{sub.plan?.name || sub.planSlug || '-'}</td>
+                    <td className="px-6 py-4 text-gray-700">{sub.plan?.maxUsers ?? '-'}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge(sub.status)}`}
@@ -197,7 +192,7 @@ export default function SubscriptionsPage() {
                       {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-6 py-4 text-gray-700">
-                      {sub.endDate ? new Date(sub.endDate).toLocaleDateString() : '-'}
+                      {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
@@ -231,52 +226,6 @@ export default function SubscriptionsPage() {
             </table>
           </div>
         )}
-      </div>
-
-      {/* Check Access Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Check Access</h2>
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Org ID</label>
-            <input
-              type="text"
-              value={accessOrgId}
-              onChange={(e) => setAccessOrgId(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Organization ID"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">App Slug</label>
-            <input
-              type="text"
-              value={accessAppSlug}
-              onChange={(e) => setAccessAppSlug(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="App slug"
-            />
-          </div>
-          <button
-            onClick={handleCheckAccess}
-            disabled={accessLoading || !accessOrgId || !accessAppSlug}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            {accessLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            Check Access
-          </button>
-          {accessResult && (
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                accessResult.hasAccess
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-red-100 text-red-700'
-              }`}
-            >
-              {accessResult.hasAccess ? 'Access Granted' : 'Access Denied'}
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Create Subscription Modal */}

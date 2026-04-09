@@ -44,6 +44,11 @@ export const getUserApps = async (id: string): Promise<ApiResponse<App[]>> => {
   return response.data;
 };
 
+export const deleteUser = async (id: string): Promise<ApiResponse<void>> => {
+  const response = await client.delete(`/api/users/${id}`);
+  return response.data;
+};
+
 export const inviteUser = async (data: {
   email: string;
   firstName: string;
