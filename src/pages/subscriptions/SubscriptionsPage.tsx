@@ -9,13 +9,20 @@ import {
   checkAccess,
 } from '../../api/subscriptions';
 import { extractArray, extractData } from '../../api/helpers';
-import { Subscription } from '../../types';
+interface Sub {
+  id: string;
+  app?: { slug: string; name: string };
+  plan?: { slug: string; name: string; maxUsers: number | null };
+  status: string;
+  startDate: string;
+  expiresAt: string | null;
+}
 
 export default function SubscriptionsPage() {
   const { user } = useAuth();
   const orgId = user?.orgId || '';
 
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Sub[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -26,13 +33,13 @@ export default function SubscriptionsPage() {
 
   // Change plan modal
   const [showPlanModal, setShowPlanModal] = useState(false);
-  const [planTarget, setPlanTarget] = useState<Subscription | null>(null);
+  const [planTarget, setPlanTarget] = useState<Sub | null>(null);
   const [newPlanId, setNewPlanId] = useState('');
   const [planLoading, setPlanLoading] = useState(false);
 
   // Change status modal
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [statusTarget, setStatusTarget] = useState<Subscription | null>(null);
+  const [statusTarget, setStatusTarget] = useState<Sub | null>(null);
   const [newStatus, setNewStatus] = useState('active');
   const [statusLoading, setStatusLoading] = useState(false);
 
@@ -178,8 +185,8 @@ export default function SubscriptionsPage() {
               <tbody className="divide-y divide-gray-200">
                 {subscriptions.map((sub) => (
                   <tr key={sub.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-medium text-gray-900">{sub.app?.name || sub.appSlug || '-'}</td>
-                    <td className="px-6 py-4 text-gray-700">{sub.plan?.name || sub.planSlug || '-'}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{sub.app?.name || '-'}</td>
+                    <td className="px-6 py-4 text-gray-700">{sub.plan?.name || '-'}</td>
                     <td className="px-6 py-4 text-gray-700">{sub.plan?.maxUsers ?? '-'}</td>
                     <td className="px-6 py-4">
                       <span
@@ -199,7 +206,7 @@ export default function SubscriptionsPage() {
                         <button
                           onClick={() => {
                             setPlanTarget(sub);
-                            setNewPlanId(sub.planId);
+                            setNewPlanId(sub.plan?.slug || '');
                             setShowPlanModal(true);
                           }}
                           className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition"
@@ -317,7 +324,7 @@ export default function SubscriptionsPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Current Plan</label>
-                <p className="text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">{planTarget.planId}</p>
+                <p className="text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">{planTarget.plan?.name || planTarget.plan?.slug || '-'}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">New Plan ID</label>
