@@ -7,7 +7,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import AppsPage from './pages/apps/AppsPage';
+// import AppsPage from './pages/apps/AppsPage';
 import OrganizationsPage from './pages/organizations/OrganizationsPage';
 import UsersPage from './pages/users/UsersPage';
 import RolesPage from './pages/roles/RolesPage';
@@ -31,7 +31,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/apps" element={<AppsPage />} />
+              {/* <Route path="/apps" element={<AppsPage />} /> */}
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/roles" element={<RolesPage />} />
