@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Building2, CreditCard, BarChart3, TrendingUp, Shield, Package } from 'lucide-react';
+import { Users, Building2, CreditCard, BarChart3, Shield, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { extractArray } from '../../api/helpers';
@@ -123,129 +123,119 @@ export default function DashboardPage() {
       label: 'Organizations',
       count: stats.orgs,
       icon: <Building2 className="w-6 h-6" />,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-100',
+      color: 'text-primary-600',
+      bgColor: 'bg-primary-50',
       path: '/organizations',
     },
     {
       label: 'Total Users',
       count: stats.users,
       icon: <Users className="w-6 h-6" />,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
+      color: 'text-primary-600',
+      bgColor: 'bg-primary-50',
       path: '/users',
     },
     {
       label: 'Roles',
       count: stats.roles,
       icon: <Shield className="w-6 h-6" />,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100',
+      color: 'text-primary-600',
+      bgColor: 'bg-primary-50',
       path: '/roles',
     },
     {
       label: 'Subscriptions',
       count: stats.subscriptions,
       icon: <CreditCard className="w-6 h-6" />,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
+      color: 'text-primary-600',
+      bgColor: 'bg-primary-50',
       path: '/subscriptions',
     },
     {
       label: 'Plans',
       count: stats.plans,
       icon: <Package className="w-6 h-6" />,
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-100',
+      color: 'text-primary-600',
+      bgColor: 'bg-primary-50',
       path: '/plans',
     },
     {
       label: 'Usage Records',
       count: stats.usage,
       icon: <BarChart3 className="w-6 h-6" />,
-      color: 'text-rose-600',
-      bgColor: 'bg-rose-100',
+      color: 'text-primary-600',
+      bgColor: 'bg-primary-50',
       path: '/usage',
     },
   ];
 
   return (
-    <div>
+    <div className="p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {/* Welcome back, {user?.firstName || 'User'}! */}
-          Welcome back
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
         </h1>
-        <p className="text-gray-500 mt-1">Here's an overview of your platform.</p>
+        <p className="text-slate-500 mt-1">Here's an overview of your platform.</p>
       </div>
 
-      {/* Stats Cards - 4 columns on large, 2 on medium */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5 mb-8">
         {cards.map((card) => (
           <Link
             to={card.path}
             key={card.label}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            className="group bg-white rounded-xl border border-slate-200 shadow-card p-5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-soft hover:border-primary-200"
           >
             {loading ? (
-              <div className="animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg" />
-                  <div className="w-16 h-4 bg-gray-200 rounded" />
+              <div className="flex items-center gap-4 animate-pulse">
+                <div className="w-12 h-12 bg-slate-200 rounded-xl shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="w-12 h-6 bg-slate-200 rounded" />
+                  <div className="w-20 h-3 bg-slate-200 rounded" />
                 </div>
-                <div className="w-20 h-8 bg-gray-200 rounded" />
               </div>
             ) : (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-2 rounded-lg ${card.bgColor} ${card.color}`}>
-                    {card.icon}
-                  </div>
-                  <TrendingUp className="w-4 h-4 text-green-500" />
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${card.bgColor} ${card.color} shrink-0 transition-transform duration-300 ease-out group-hover:scale-110`}>
+                  {card.icon}
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{card.count}</p>
-                <p className="text-sm text-gray-500 mt-1">{card.label}</p>
-              </>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">{card.count}</p>
+                  <p className="text-sm text-slate-500 mt-1.5 truncate">{card.label}</p>
+                </div>
+              </div>
             )}
           </Link>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-gray-400" />
+      <div className="bg-white rounded-xl border border-slate-200 shadow-card p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-primary-500" />
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link to="/users" className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            <Users className="w-5 h-5 text-purple-600" />
-            <div>
-              <p className="font-medium text-gray-900">Manage Users</p>
-              <p className="text-sm text-gray-500">Invite and manage members</p>
-            </div>
-          </Link>
-          <Link to="/organizations" className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            <Building2 className="w-5 h-5 text-emerald-600" />
-            <div>
-              <p className="font-medium text-gray-900">Organizations</p>
-              <p className="text-sm text-gray-500">View and manage orgs</p>
-            </div>
-          </Link>
-          <Link to="/roles" className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            <Shield className="w-5 h-5 text-indigo-600" />
-            <div>
-              <p className="font-medium text-gray-900">Roles & Permissions</p>
-              <p className="text-sm text-gray-500">Manage access control</p>
-            </div>
-          </Link>
-          <Link to="/subscriptions" className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            <CreditCard className="w-5 h-5 text-orange-600" />
-            <div>
-              <p className="font-medium text-gray-900">Subscriptions</p>
-              <p className="text-sm text-gray-500">Manage plans and billing</p>
-            </div>
-          </Link>
+          {[
+            { to: '/users', icon: Users, title: 'Manage Users', desc: 'Invite and manage members' },
+            { to: '/organizations', icon: Building2, title: 'Organizations', desc: 'View and manage orgs' },
+            { to: '/roles', icon: Shield, title: 'Roles & Permissions', desc: 'Manage access control' },
+            { to: '/subscriptions', icon: CreditCard, title: 'Subscriptions', desc: 'Manage plans and billing' },
+          ].map(({ to, icon: Icon, title, desc }) => (
+            <Link
+              key={to}
+              to={to}
+              className="group flex items-center gap-3 p-4 rounded-lg border border-slate-200 transition-all duration-200 ease-out hover:bg-primary-50 hover:border-primary-200"
+            >
+              <div className="p-2 rounded-lg bg-primary-50 text-primary-600 transition-transform duration-200 ease-out group-hover:scale-110">
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-medium text-slate-900">{title}</p>
+                <p className="text-sm text-slate-500">{desc}</p>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

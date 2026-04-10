@@ -44,12 +44,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50 to-secondary-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-2xl shadow-soft border border-slate-200 p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dream Platform</h1>
-            <p className="mt-2 text-sm text-gray-600">Create your account</p>
+            <h1 className="text-3xl font-bold text-slate-900">Dream Platform</h1>
+            <p className="mt-2 text-sm text-slate-600">Create your account</p>
           </div>
 
           {error && (
@@ -65,7 +65,7 @@ export default function RegisterPage() {
               </div>
               <Link
                 to="/login"
-                className="text-blue-600 hover:text-blue-500 font-medium text-sm"
+                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
               >
                 Go to Sign In
               </Link>
@@ -75,12 +75,12 @@ export default function RegisterPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-1">
                       First name
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <User className="h-5 w-5 text-gray-400" />
+                        <User className="h-5 w-5 text-slate-400" />
                       </div>
                       <input
                         id="firstName"
@@ -88,14 +88,14 @@ export default function RegisterPage() {
                         required
                         value={formData.firstName}
                         onChange={(e) => handleChange('firstName', e.target.value)}
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                         placeholder="John"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-1">
                       Last name
                     </label>
                     <input
@@ -104,19 +104,19 @@ export default function RegisterPage() {
                       required
                       value={formData.lastName}
                       onChange={(e) => handleChange('lastName', e.target.value)}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                       placeholder="Doe"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                     Email address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-slate-400" />
                     </div>
                     <input
                       id="email"
@@ -124,19 +124,19 @@ export default function RegisterPage() {
                       required
                       value={formData.email}
                       onChange={(e) => handleChange('email', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                       placeholder="you@example.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
                     Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-slate-400" />
                     </div>
                     <input
                       id="password"
@@ -144,19 +144,19 @@ export default function RegisterPage() {
                       required
                       value={formData.password}
                       onChange={(e) => handleChange('password', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                       placeholder="Create a password"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="orgName" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="orgName" className="block text-sm font-medium text-slate-700 mb-1">
                     Organization name
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building2 className="h-5 w-5 text-gray-400" />
+                      <Building2 className="h-5 w-5 text-slate-400" />
                     </div>
                     <input
                       id="orgName"
@@ -164,14 +164,14 @@ export default function RegisterPage() {
                       required
                       value={formData.orgName}
                       onChange={(e) => handleChange('orgName', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                       placeholder="My Organization"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="orgSlug" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="orgSlug" className="block text-sm font-medium text-slate-700 mb-1">
                     Organization slug
                   </label>
                   <input
@@ -180,13 +180,13 @@ export default function RegisterPage() {
                     required
                     value={formData.orgSlug}
                     onChange={(e) => handleChange('orgSlug', e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50"
+                    className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-slate-50"
                     placeholder="my-organization"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="appSlug" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="appSlug" className="block text-sm font-medium text-slate-700 mb-1">
                     App slug
                   </label>
                   <input
@@ -195,7 +195,7 @@ export default function RegisterPage() {
                     required
                     value={formData.appSlug}
                     onChange={(e) => handleChange('appSlug', e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     placeholder="books"
                   />
                 </div>
@@ -203,7 +203,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <svg
@@ -221,9 +221,9 @@ export default function RegisterPage() {
                 </button>
               </form>
 
-              <p className="mt-6 text-center text-sm text-gray-600">
+              <p className="mt-6 text-center text-sm text-slate-600">
                 Already have an account?{' '}
-                <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
+                <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
                   Sign in
                 </Link>
               </p>

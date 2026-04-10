@@ -235,7 +235,7 @@ export default function RolesPage() {
       case "delete":
         return "bg-red-100 text-red-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
@@ -247,26 +247,26 @@ export default function RolesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-10">
+    <div className="min-h-screen bg-slate-50 p-6 lg:p-10">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Shield className="w-7 h-7 text-indigo-600" />
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <Shield className="w-7 h-7 text-primary-600" />
           Roles &amp; Permissions
         </h1>
-        <p className="text-gray-500 mt-1">Manage roles, permissions, and user assignments.</p>
+        <p className="text-slate-500 mt-1">Manage roles, permissions, and user assignments.</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8 border-b border-gray-200 pb-2">
+      <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-200 pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-all duration-200 ease-out ${
               activeTab === tab.key
-                ? "bg-white text-indigo-600 border border-b-0 border-gray-200 shadow-sm"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                ? "bg-white text-primary-600 border border-b-0 border-slate-200 shadow-sm"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
             }`}
           >
             {tab.icon}
@@ -282,8 +282,8 @@ export default function RolesPage() {
 
           {rolesLoading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
-              <span className="ml-2 text-gray-500">Loading roles...</span>
+              <Loader2 className="w-6 h-6 text-primary-600 animate-spin" />
+              <span className="ml-2 text-slate-500">Loading roles...</span>
             </div>
           )}
           {rolesError && (
@@ -298,16 +298,16 @@ export default function RolesPage() {
               {roles.map((role) => (
                 <div
                   key={role.id}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between"
+                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between"
                 >
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{role.name}</h3>
-                    <p className="text-xs text-gray-400 font-mono mt-1">{role.slug}</p>
-                    <p className="text-sm text-gray-500 mt-2">{role.description}</p>
+                    <h3 className="text-lg font-semibold text-slate-900">{role.name}</h3>
+                    <p className="text-xs text-slate-400 font-mono mt-1">{role.slug}</p>
+                    <p className="text-sm text-slate-500 mt-2">{role.description}</p>
                   </div>
                   <button
                     onClick={() => openPermissionsModal(role)}
-                    className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors self-start"
+                    className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-all duration-200 ease-out self-start"
                   >
                     <Eye className="w-4 h-4" />
                     View Permissions
@@ -315,7 +315,7 @@ export default function RolesPage() {
                 </div>
               ))}
               {roles.length === 0 && (
-                <p className="text-gray-400 col-span-full text-center py-8">No roles found.</p>
+                <p className="text-slate-400 col-span-full text-center py-8">No roles found.</p>
               )}
             </div>
           )}
@@ -324,15 +324,15 @@ export default function RolesPage() {
 
       {/* ===== ASSIGN ROLE TAB ===== */}
       {activeTab === "assign" && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-lg">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-indigo-600" />
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-lg">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <UserPlus className="w-5 h-5 text-primary-600" />
             Assign Role
           </h2>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Organization</label>
               <select
                 value={assignForm.orgId}
                 onChange={(e) => {
@@ -340,7 +340,7 @@ export default function RolesPage() {
                   setAssignForm({ ...assignForm, orgId, userId: '', appId: booksAppId });
                   fetchOrgUsers(orgId);
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
               >
                 <option value="">Select an organization</option>
                 {orgs.map((o) => (
@@ -349,12 +349,12 @@ export default function RolesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">User</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
               <select
                 value={assignForm.userId}
                 onChange={(e) => setAssignForm({ ...assignForm, userId: e.target.value })}
                 disabled={!assignForm.orgId}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
               >
                 <option value="">{assignForm.orgId ? 'Select a user' : 'Select an org first'}</option>
                 {users.map((u) => (
@@ -363,11 +363,11 @@ export default function RolesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
               <select
                 value={assignForm.roleId}
                 onChange={(e) => setAssignForm({ ...assignForm, roleId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
               >
                 <option value="">Select a role</option>
                 {roles.map((r) => (
@@ -391,7 +391,7 @@ export default function RolesPage() {
             <button
               onClick={handleAssign}
               disabled={assignLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50"
             >
               {assignLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -406,19 +406,19 @@ export default function RolesPage() {
 
       {/* ===== USER LOOKUP TAB ===== */}
       {activeTab === "lookup" && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-lg">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-600" />
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-lg">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary-600" />
             User Role Lookup
           </h2>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">User</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
               <select
                 value={lookupUserId}
                 onChange={(e) => setLookupUserId(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
               >
                 <option value="">Select a user</option>
                 {users.map((u) => (
@@ -437,7 +437,7 @@ export default function RolesPage() {
             <button
               onClick={handleLookup}
               disabled={lookupLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50"
             >
               {lookupLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -449,17 +449,17 @@ export default function RolesPage() {
 
             {lookupDone && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-3">
+                <p className="text-sm font-medium text-slate-700 mb-3">
                   Roles ({lookupRoles.length})
                 </p>
                 {lookupRoles.length === 0 ? (
-                  <p className="text-sm text-gray-400">No roles found for this user/app.</p>
+                  <p className="text-sm text-slate-400">No roles found for this user/app.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {lookupRoles.map((r: any) => (
                       <span
                         key={r.roleId || r.id}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700"
+                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-primary-100 text-primary-700"
                       >
                         {r.roleName || r.name || r.roleSlug || r.slug}
                       </span>
@@ -477,19 +477,19 @@ export default function RolesPage() {
         <div>
           <div className="flex items-center gap-3 mb-6">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Filter by module"
                 value={permModule}
                 onChange={(e) => setPermModule(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handlePermModuleSearch()}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
             <button
               onClick={handlePermModuleSearch}
-              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out"
             >
               Filter
             </button>
@@ -497,8 +497,8 @@ export default function RolesPage() {
 
           {permLoading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
-              <span className="ml-2 text-gray-500">Loading permissions...</span>
+              <Loader2 className="w-6 h-6 text-primary-600 animate-spin" />
+              <span className="ml-2 text-slate-500">Loading permissions...</span>
             </div>
           )}
           {permError && (
@@ -509,22 +509,22 @@ export default function RolesPage() {
           )}
 
           {!permLoading && !permError && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-3 font-medium text-gray-600">Name</th>
-                    <th className="px-6 py-3 font-medium text-gray-600">Slug</th>
-                    <th className="px-6 py-3 font-medium text-gray-600">Module</th>
-                    <th className="px-6 py-3 font-medium text-gray-600">Action</th>
+                    <th className="px-6 py-3 font-medium text-slate-600">Name</th>
+                    <th className="px-6 py-3 font-medium text-slate-600">Slug</th>
+                    <th className="px-6 py-3 font-medium text-slate-600">Module</th>
+                    <th className="px-6 py-3 font-medium text-slate-600">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-slate-100">
                   {allPermissions.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-3 text-gray-900">{p.name}</td>
-                      <td className="px-6 py-3 text-gray-500 font-mono text-xs">{p.slug}</td>
-                      <td className="px-6 py-3 text-gray-500">{p.module}</td>
+                    <tr key={p.id} className="hover:bg-slate-50 transition-all duration-200 ease-out">
+                      <td className="px-6 py-3 text-slate-900">{p.name}</td>
+                      <td className="px-6 py-3 text-slate-500 font-mono text-xs">{p.slug}</td>
+                      <td className="px-6 py-3 text-slate-500">{p.module}</td>
                       <td className="px-6 py-3">
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${actionColor(p.action)}`}
@@ -536,7 +536,7 @@ export default function RolesPage() {
                   ))}
                   {allPermissions.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
+                      <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
                         No permissions found.
                       </td>
                     </tr>
@@ -552,44 +552,44 @@ export default function RolesPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col mx-4">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">
                 {modalRole?.name} — Permissions
               </h3>
               <button
                 onClick={closeModal}
-                className="p-1 rounded hover:bg-gray-100 transition-colors"
+                className="p-1 rounded hover:bg-slate-100 transition-all duration-200 ease-out"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
 
             <div className="overflow-y-auto p-6">
               {modalLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
-                  <span className="ml-2 text-gray-500">Loading permissions...</span>
+                  <Loader2 className="w-6 h-6 text-primary-600 animate-spin" />
+                  <span className="ml-2 text-slate-500">Loading permissions...</span>
                 </div>
               ) : modalPermissions.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">
+                <p className="text-slate-400 text-center py-8">
                   No permissions assigned to this role.
                 </p>
               ) : (
                 <div className="space-y-6">
                   {Object.entries(groupByModule(modalPermissions)).map(([mod, perms]) => (
                     <div key={mod}>
-                      <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
+                      <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2">
                         {mod}
                       </h4>
-                      <div className="bg-gray-50 rounded-lg divide-y divide-gray-200">
+                      <div className="bg-slate-50 rounded-lg divide-y divide-slate-200">
                         {perms.map((p) => (
                           <div
                             key={p.id}
                             className="flex items-center justify-between px-4 py-3"
                           >
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{p.name}</p>
-                              <p className="text-xs text-gray-400 font-mono">{p.slug}</p>
+                              <p className="text-sm font-medium text-slate-900">{p.name}</p>
+                              <p className="text-xs text-slate-400 font-mono">{p.slug}</p>
                             </div>
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${actionColor(p.action)}`}

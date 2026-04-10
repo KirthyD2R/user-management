@@ -104,20 +104,22 @@ export default function UsagePage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Usage Tracking</h1>
-        <div className="flex gap-2">
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div>
+          <p className="text-sm text-slate-500">Track and manage your app usage and quotas.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => { setIncrementForm({ orgId: '', appSlug: 'books', usageKey: '', incrementBy: 1 }); setShowIncrementModal(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium shadow-sm transition-all duration-200 ease-out">
             <Plus className="w-4 h-4" /> Increment
           </button>
           <button onClick={() => { setCheckIncrementForm({ orgId: '', appSlug: 'books', usageKey: '', incrementBy: 1 }); setCheckIncrementResult(null); setShowCheckIncrementModal(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600 text-sm font-medium shadow-sm transition-all duration-200 ease-out">
             <CheckCircle className="w-4 h-4" /> Check & Increment
           </button>
           <button onClick={() => { setResetForm({ orgId: '', appSlug: 'books', usageKey: '' }); setShowResetModal(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white border border-rose-200 text-rose-600 rounded-lg hover:bg-rose-50 text-sm font-medium shadow-sm transition-all duration-200 ease-out">
             <RotateCcw className="w-4 h-4" /> Reset
           </button>
         </div>
@@ -135,60 +137,62 @@ export default function UsagePage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex gap-4 items-end">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">App Slug</label>
+      <div className="bg-white rounded-xl shadow-card border border-slate-200 p-4 mb-6">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex-1 min-w-[160px]">
+            <label className="block text-sm font-medium text-slate-700 mb-1">App Slug</label>
             <input type="text" value={appSlug} onChange={(e) => setAppSlug(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. books" />
+              className="field" placeholder="e.g. books" />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Period</label>
+          <div className="flex-1 min-w-[160px]">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Period</label>
             <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              className="field" />
           </div>
-          <button onClick={fetchUsage} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
+          <button onClick={fetchUsage} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium transition-all duration-200 ease-out">
             Refresh
           </button>
         </div>
       </div>
 
       {/* Usage Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading usage data...</div>
+          <div className="p-8 text-center text-slate-500">Loading usage data...</div>
         ) : usageRecords.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <div className="p-12 text-center text-slate-500">
+            <BarChart3 className="w-12 h-12 mx-auto mb-3 text-slate-300" />
             <p>No usage records found for this period</p>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usage Key</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">App</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Count</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Period</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Usage Key</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">App</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Count</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Period</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Created</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-200">
               {usageRecords.map((record, idx) => (
-                <tr key={record.id || idx} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{record.usageKey}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{record.appSlug}</td>
+                <tr key={record.id || idx} className="hover:bg-slate-50">
+                  <td className="px-6 py-4 text-sm font-medium text-slate-900">{record.usageKey}</td>
+                  <td className="px-6 py-4 text-sm text-slate-500">{record.appSlug}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-primary-100 text-primary-800">
                       {record.count}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{record.period}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{new Date(record.createdAt).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 text-sm text-slate-500">{record.period}</td>
+                  <td className="px-6 py-4 text-sm text-slate-500">{new Date(record.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -199,28 +203,28 @@ export default function UsagePage() {
             <h2 className="text-lg font-semibold mb-4">Increment Usage</h2>
             <form onSubmit={handleIncrement} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Org ID</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Org ID</label>
                 <input type="text" value={incrementForm.orgId} onChange={(e) => setIncrementForm({ ...incrementForm, orgId: e.target.value })}
-                  placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">App Slug</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">App Slug</label>
                 <input type="text" value={incrementForm.appSlug} onChange={(e) => setIncrementForm({ ...incrementForm, appSlug: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Usage Key</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Usage Key</label>
                 <input type="text" value={incrementForm.usageKey} onChange={(e) => setIncrementForm({ ...incrementForm, usageKey: e.target.value })}
-                  placeholder="e.g. invoices-created" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. invoices-created" required className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Increment By</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Increment By</label>
                 <input type="number" min="1" value={incrementForm.incrementBy} onChange={(e) => setIncrementForm({ ...incrementForm, incrementBy: parseInt(e.target.value) || 1 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div className="flex gap-3 justify-end">
-                <button type="button" onClick={() => setShowIncrementModal(false)} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Increment</button>
+                <button type="button" onClick={() => setShowIncrementModal(false)} className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">Increment</button>
               </div>
             </form>
           </div>
@@ -234,24 +238,24 @@ export default function UsagePage() {
             <h2 className="text-lg font-semibold mb-4">Check & Increment</h2>
             <form onSubmit={handleCheckAndIncrement} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Org ID</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Org ID</label>
                 <input type="text" value={checkIncrementForm.orgId} onChange={(e) => setCheckIncrementForm({ ...checkIncrementForm, orgId: e.target.value })}
-                  placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">App Slug</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">App Slug</label>
                 <input type="text" value={checkIncrementForm.appSlug} onChange={(e) => setCheckIncrementForm({ ...checkIncrementForm, appSlug: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Usage Key</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Usage Key</label>
                 <input type="text" value={checkIncrementForm.usageKey} onChange={(e) => setCheckIncrementForm({ ...checkIncrementForm, usageKey: e.target.value })}
-                  placeholder="e.g. invoices-created" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. invoices-created" required className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Increment By</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Increment By</label>
                 <input type="number" min="1" value={checkIncrementForm.incrementBy} onChange={(e) => setCheckIncrementForm({ ...checkIncrementForm, incrementBy: parseInt(e.target.value) || 1 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               {checkIncrementResult && (
                 <div className={`p-3 rounded-lg text-sm ${checkIncrementResult.allowed ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
@@ -261,8 +265,8 @@ export default function UsagePage() {
                 </div>
               )}
               <div className="flex gap-3 justify-end">
-                <button type="button" onClick={() => setShowCheckIncrementModal(false)} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Close</button>
-                <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Check & Increment</button>
+                <button type="button" onClick={() => setShowCheckIncrementModal(false)} className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200">Close</button>
+                <button type="submit" className="px-4 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600">Check & Increment</button>
               </div>
             </form>
           </div>
@@ -274,25 +278,25 @@ export default function UsagePage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
             <h2 className="text-lg font-semibold mb-4 text-red-600">Reset Usage</h2>
-            <p className="text-sm text-gray-600 mb-4">This will reset the usage counter to zero. This action cannot be undone.</p>
+            <p className="text-sm text-slate-600 mb-4">This will reset the usage counter to zero. This action cannot be undone.</p>
             <form onSubmit={handleReset} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Org ID</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Org ID</label>
                 <input type="text" value={resetForm.orgId} onChange={(e) => setResetForm({ ...resetForm, orgId: e.target.value })}
-                  placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">App Slug</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">App Slug</label>
                 <input type="text" value={resetForm.appSlug} onChange={(e) => setResetForm({ ...resetForm, appSlug: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Usage Key</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Usage Key</label>
                 <input type="text" value={resetForm.usageKey} onChange={(e) => setResetForm({ ...resetForm, usageKey: e.target.value })}
-                  placeholder="e.g. invoices-created" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. invoices-created" required className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div className="flex gap-3 justify-end">
-                <button type="button" onClick={() => setShowResetModal(false)} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button type="button" onClick={() => setShowResetModal(false)} className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Reset</button>
               </div>
             </form>

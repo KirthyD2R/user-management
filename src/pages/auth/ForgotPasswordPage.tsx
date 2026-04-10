@@ -26,12 +26,12 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50 to-secondary-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-2xl shadow-soft border border-slate-200 p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dream Platform</h1>
-            <p className="mt-2 text-sm text-gray-600">Reset your password</p>
+            <h1 className="text-3xl font-bold text-slate-900">Dream Platform</h1>
+            <p className="mt-2 text-sm text-slate-600">Reset your password</p>
           </div>
 
           {error && (
@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
               </div>
               <Link
                 to="/login"
-                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500 font-medium"
+                className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Sign In
@@ -57,12 +57,12 @@ export default function ForgotPasswordPage() {
             <>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                     Email address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-slate-400" />
                     </div>
                     <input
                       id="email"
@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <svg
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
               <div className="mt-6 text-center">
                 <Link
                   to="/login"
-                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500 font-medium"
+                  className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Back to Sign In
