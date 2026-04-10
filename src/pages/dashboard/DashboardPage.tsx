@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { extractArray } from '../../api/helpers';
 import { listOrganizations } from '../../api/organizations';
-import { getOrgSubscriptions } from '../../api/subscriptions';
+import { getOrgSubscriptions, checkAccess } from '../../api/subscriptions';
 import { listOrgUsers } from '../../api/users';
 import { listRoles, getUserRolesForApp } from '../../api/roles';
 import { listPlans } from '../../api/plans';
@@ -86,8 +86,26 @@ export default function DashboardPage() {
         ).length;
       }
 
+      // Count only orgs with books app access
+      let booksOrgCount = 0;
+      if (results[0].status === 'fulfilled' && results[0].value) {
+        const allOrgs = extractArray<any>(results[0].value);
+        const accessChecks = await Promise.all(
+          allOrgs.map(async (org: any) => {
+            try {
+              const accessRes = await checkAccess(org.id, 'books');
+              const data = accessRes?.data;
+              return data?.hasAccess === true;
+            } catch {
+              return false;
+            }
+          })
+        );
+        booksOrgCount = accessChecks.filter(Boolean).length;
+      }
+
       setStats({
-        orgs: getCount(results[0]),
+        orgs: booksOrgCount,
         users: booksUserCount,
         roles: getCount(results[2]),
         subscriptions: booksSubsCount,

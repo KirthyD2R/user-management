@@ -15,7 +15,8 @@ import {
   getOrgStats,
   updateOrgStatus,
 } from "../../api/organizations";
-import { extractArray, extractData, extractPagination } from "../../api/helpers";
+import { checkAccess } from "../../api/subscriptions";
+import { extractArray, extractData } from "../../api/helpers";
 import { Organization } from "../../types";
 
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
@@ -78,9 +79,8 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const OrganizationsPage: React.FC = () => {
-  const [orgs, setOrgs] = useState<Organization[]>([]);
+  const [allFilteredOrgs, setAllFilteredOrgs] = useState<Organization[]>([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,15 +94,38 @@ const OrganizationsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   const LIMIT = 10;
+  const APP_SLUG = "books";
+
+  const totalPages = Math.max(1, Math.ceil(allFilteredOrgs.length / LIMIT));
+  const orgs = allFilteredOrgs.slice((page - 1) * LIMIT, page * LIMIT);
 
   const fetchOrgs = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await listOrganizations(page, LIMIT);
-      setOrgs(extractArray<Organization>(res));
-      const pagination = extractPagination(res);
-      setTotalPages(pagination.totalPages);
+      // Fetch all organizations
+      const res = await listOrganizations(1, 1000);
+      const allOrgs = extractArray<Organization>(res);
+
+      // Check which orgs have a books app subscription
+      const accessResults = await Promise.all(
+        allOrgs.map(async (org) => {
+          try {
+            const accessRes = await checkAccess(org.id, APP_SLUG);
+            const data = extractData<{ hasAccess: boolean }>(accessRes);
+            return { org, hasAccess: data?.hasAccess === true };
+          } catch {
+            return { org, hasAccess: false };
+          }
+        })
+      );
+
+      const filtered = accessResults
+        .filter((r) => r.hasAccess)
+        .map((r) => r.org);
+
+      setAllFilteredOrgs(filtered);
+      setPage(1);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to fetch organizations";
       setError(message);
@@ -113,7 +136,7 @@ const OrganizationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrgs();
-  }, [page]);
+  }, []);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
