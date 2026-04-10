@@ -18,6 +18,7 @@ import {
   listAllPermissions,
 } from "../../api/roles";
 import { listOrganizations } from "../../api/organizations";
+import { checkAccess } from "../../api/subscriptions";
 import { listOrgUsers } from "../../api/users";
 import { getApp } from "../../api/apps";
 import { useAuth } from "../../contexts/AuthContext";
@@ -90,10 +91,25 @@ export default function RolesPage() {
   const fetchDropdownData = async () => {
     try {
       const [orgsRes, appRes] = await Promise.all([
-        listOrganizations(),
+        listOrganizations(1, 1000),
         getApp('books'),
       ]);
-      setOrgs(extractArray<{ id: string; name: string }>(orgsRes));
+      const allOrgs = extractArray<{ id: string; name: string }>(orgsRes);
+
+      // Filter orgs to only those with books app access
+      const accessChecks = await Promise.all(
+        allOrgs.map(async (org) => {
+          try {
+            const accessRes = await checkAccess(org.id, 'books');
+            const data = extractData<{ hasAccess: boolean }>(accessRes);
+            return data?.hasAccess === true;
+          } catch {
+            return false;
+          }
+        })
+      );
+      setOrgs(allOrgs.filter((_, i) => accessChecks[i]));
+
       const appData = extractData<any>(appRes);
       if (appData?.id) setBooksAppId(appData.id);
 

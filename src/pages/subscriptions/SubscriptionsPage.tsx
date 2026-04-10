@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, ArrowUpDown, Power, Search, X, Loader2 } from 'lucide-react';
+import { Plus, ArrowUpDown, Power, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   createSubscription,
@@ -8,7 +8,11 @@ import {
   changeStatus,
   checkAccess,
 } from '../../api/subscriptions';
+import { listOrganizations } from '../../api/organizations';
+import { listApps } from '../../api/apps';
+import { listPlans } from '../../api/plans';
 import { extractArray, extractData } from '../../api/helpers';
+import { Organization, App, Plan } from '../../types';
 interface Sub {
   id: string;
   app?: { slug: string; name: string };
@@ -49,11 +53,48 @@ export default function SubscriptionsPage() {
   const [accessResult, setAccessResult] = useState<{ hasAccess: boolean } | null>(null);
   const [accessLoading, setAccessLoading] = useState(false);
 
+  // Dropdown data for create modal
+  const [orgOptions, setOrgOptions] = useState<Organization[]>([]);
+  const [appOptions, setAppOptions] = useState<App[]>([]);
+  const [planOptions, setPlanOptions] = useState<Plan[]>([]);
+
   useEffect(() => {
     if (orgId) {
       fetchSubscriptions();
     }
+    fetchDropdownOptions();
   }, [orgId]);
+
+  const fetchDropdownOptions = async () => {
+    try {
+      const [orgsRes, appsRes, plansRes] = await Promise.all([
+        listOrganizations(1, 1000),
+        listApps(true),
+        listPlans('books'),
+      ]);
+      const allOrgs = extractArray<Organization>(orgsRes);
+
+      // Filter orgs to only those with books app access
+      const accessChecks = await Promise.all(
+        allOrgs.map(async (org) => {
+          try {
+            const accessRes = await checkAccess(org.id, 'books');
+            const data = extractData<{ hasAccess: boolean }>(accessRes);
+            return data?.hasAccess === true;
+          } catch {
+            return false;
+          }
+        })
+      );
+      setOrgOptions(allOrgs.filter((_, i) => accessChecks[i]));
+
+      const allApps = extractArray<App>(appsRes);
+      setAppOptions(allApps.filter((a) => a.slug === 'books'));
+      setPlanOptions(extractArray<Plan>(plansRes));
+    } catch {
+      // ignore - dropdowns will be empty
+    }
+  };
 
   const fetchSubscriptions = async () => {
     setLoading(true);
@@ -250,33 +291,43 @@ export default function SubscriptionsPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Org ID</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                <select
                   value={createForm.orgId}
                   onChange={(e) => setCreateForm({ ...createForm, orgId: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select an organization</option>
+                  {orgOptions.map((o) => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">App ID</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">App</label>
+                <select
                   value={createForm.appId}
                   onChange={(e) => setCreateForm({ ...createForm, appId: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter app ID"
-                />
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select an app</option>
+                  {appOptions.map((a) => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Plan ID</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Plan</label>
+                <select
                   value={createForm.planId}
                   onChange={(e) => setCreateForm({ ...createForm, planId: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter plan ID"
-                />
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a plan</option>
+                  {planOptions.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
@@ -327,14 +378,17 @@ export default function SubscriptionsPage() {
                 <p className="text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">{planTarget.plan?.name || planTarget.plan?.slug || '-'}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Plan ID</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Plan</label>
+                <select
                   value={newPlanId}
                   onChange={(e) => setNewPlanId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter new plan ID"
-                />
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a plan</option>
+                  {planOptions.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
