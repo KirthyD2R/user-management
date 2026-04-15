@@ -9,6 +9,7 @@ import {
   List,
   Loader2,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 import {
   listRoles,
@@ -16,6 +17,7 @@ import {
   assignRole,
   getUserRolesForApp,
   listAllPermissions,
+  removeRoleAssignment,
 } from "../../api/roles";
 import { listOrganizations } from "../../api/organizations";
 import { checkAccess } from "../../api/subscriptions";
@@ -189,6 +191,7 @@ export default function RolesPage() {
     try {
       const res: any = await getUserRolesForApp(lookupUserId, lookupAppSlug);
       const rolesArr = res?.data?.roles ?? extractArray<any>(res);
+      console.log("[User Role Lookup] response roles:", rolesArr);
       setLookupRoles(rolesArr);
       setLookupDone(true);
     } catch (err: any) {
@@ -196,6 +199,37 @@ export default function RolesPage() {
       showToast(msg, "error");
     } finally {
       setLookupLoading(false);
+    }
+  };
+
+  const [removingId, setRemovingId] = useState<string>("");
+  const [confirmRemove, setConfirmRemove] = useState<{ assignmentId: string; roleName: string } | null>(null);
+
+  const requestRemoveRole = (assignmentId: string, roleName: string) => {
+    setConfirmRemove({ assignmentId, roleName });
+  };
+
+  const handleRemoveRole = async () => {
+    if (!confirmRemove) return;
+    const { assignmentId } = confirmRemove;
+    if (!assignmentId) {
+      showToast("Missing assignment id; cannot remove.", "error");
+      setConfirmRemove(null);
+      return;
+    }
+    setRemovingId(assignmentId);
+    try {
+      await removeRoleAssignment(assignmentId);
+      showToast("Role removed successfully!", "success");
+      setLookupRoles((prev) =>
+        prev.filter((r: any) => (r.assignmentId || r.assignment_id || r.userRoleId || r.user_role_id || r.uraId || r.id) !== assignmentId)
+      );
+      setConfirmRemove(null);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message || err?.response?.data?.message || "Failed to remove role.";
+      showToast(msg, "error");
+    } finally {
+      setRemovingId("");
     }
   };
 
@@ -456,14 +490,31 @@ export default function RolesPage() {
                   <p className="text-sm text-slate-400">No roles found for this user/app.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {lookupRoles.map((r: any) => (
-                      <span
-                        key={r.roleId || r.id}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-primary-100 text-primary-700"
-                      >
-                        {r.roleName || r.name || r.roleSlug || r.slug}
-                      </span>
-                    ))}
+                    {lookupRoles.map((r: any) => {
+                      const assignmentId = r.assignmentId || r.assignment_id || r.userRoleId || r.user_role_id || r.uraId || r.id;
+                      const label = r.roleName || r.name || r.roleSlug || r.slug;
+                      const isRemoving = removingId === assignmentId;
+                      return (
+                        <span
+                          key={assignmentId || r.roleId}
+                          className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-700"
+                        >
+                          {label}
+                          <button
+                            onClick={() => requestRemoveRole(assignmentId, label)}
+                            disabled={isRemoving}
+                            title="Remove role"
+                            className="p-1 rounded-full hover:bg-red-100 hover:text-red-600 transition-all duration-200 ease-out disabled:opacity-50"
+                          >
+                            {isRemoving ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -545,6 +596,44 @@ export default function RolesPage() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ===== REMOVE ROLE CONFIRM MODAL ===== */}
+      {confirmRemove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">Remove Role</h3>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-sm text-slate-600">
+                Are you sure you want to remove the role{" "}
+                <span className="font-semibold text-slate-900">"{confirmRemove.roleName}"</span> from this user?
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 px-6 py-4 bg-slate-50 border-t border-slate-200">
+              <button
+                onClick={() => setConfirmRemove(null)}
+                disabled={!!removingId}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-all duration-200 ease-out disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRemoveRole}
+                disabled={!!removingId}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all duration-200 ease-out disabled:opacity-50"
+              >
+                {removingId ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                OK
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
