@@ -94,10 +94,7 @@ export default function PlansPage() {
     }
   };
 
-  const highlightPlan = (slug: string) => {
-    if (slug === 'pro') return 'border-primary-500 ring-4 ring-primary-100 shadow-glow';
-    return 'border-slate-200';
-  };
+  const highlightPlan = (_slug: string) => 'border-slate-200';
 
   return (
     <div className="p-6">
@@ -152,7 +149,7 @@ export default function PlansPage() {
       ) : plans.length === 0 ? (
         <div className="text-center py-16 text-slate-500 text-sm">No plans found.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {plans.map((plan) => {
             const price = billingCycle === 'monthly' ? plan.pricing.monthly : plan.pricing.yearly;
             const perMonth = billingCycle === 'yearly' ? Math.round(plan.pricing.yearly / 12) : plan.pricing.monthly;
@@ -160,18 +157,13 @@ export default function PlansPage() {
             return (
               <div
                 key={plan.slug}
-                className={`bg-white rounded-xl shadow-sm border-2 p-6 flex flex-col ${highlightPlan(plan.slug)}`}
+                className={`bg-white rounded-lg shadow-sm border p-4 flex flex-col ${highlightPlan(plan.slug)}`}
               >
-                {plan.slug === 'pro' && (
-                  <span className="inline-flex self-start items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 mb-3">
-                    Popular
-                  </span>
-                )}
-                <h3 className="text-xl font-bold text-slate-900 mb-1">{plan.name}</h3>
+                <h3 className="text-base font-semibold text-slate-900 mb-1">{plan.name}</h3>
 
-                <div className="mb-4">
-                  <span className="text-3xl font-bold text-slate-900">{formatPrice(perMonth)}</span>
-                  {price > 0 && <span className="text-sm text-slate-500 ml-1">/month</span>}
+                <div className="mb-3">
+                  <span className="text-2xl font-bold text-slate-900">{formatPrice(perMonth)}</span>
+                  {price > 0 && <span className="text-xs text-slate-500 ml-1">/month</span>}
                   {billingCycle === 'yearly' && price > 0 && (
                     <p className="text-xs text-slate-400 mt-1">
                       {formatPrice(price)} billed yearly
@@ -179,16 +171,16 @@ export default function PlansPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 mb-4 text-sm text-slate-600">
-                  <Users className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-2 mb-3 text-xs text-slate-600">
+                  <Users className="w-3.5 h-3.5 text-slate-400" />
                   <span>{plan.maxUsers ? `Up to ${plan.maxUsers} users` : 'Unlimited users'}</span>
                 </div>
 
                 <button
                   onClick={() => handleViewLimits(plan)}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all duration-200 ease-out mt-auto"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-all duration-200 ease-out mt-auto"
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-3.5 w-3.5" />
                   View Limits
                 </button>
               </div>

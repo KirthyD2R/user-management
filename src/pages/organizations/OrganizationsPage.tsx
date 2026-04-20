@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import ThemedSelect from "../../components/ThemedSelect";
 import {
   listOrganizations,
   createOrganization,
@@ -205,19 +206,14 @@ const OrganizationsPage: React.FC = () => {
     <div>
       <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
       {type === "select" ? (
-        <select
-          name={name}
+        <ThemedSelect
           value={(formData as Record<string, string>)[name] || ""}
-          onChange={handleFormChange}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option value="">Select {label}</option>
-          {options?.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+          onChange={(v) =>
+            setFormData((prev) => ({ ...prev, [name]: v } as Partial<Organization>))
+          }
+          options={(options || []).map((o) => ({ value: o, label: o }))}
+          placeholder={`Select ${label}`}
+        />
       ) : (
         <input
           type="text"

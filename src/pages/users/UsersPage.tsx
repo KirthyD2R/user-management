@@ -4,8 +4,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { listOrgUsers, lookupUser, inviteUser, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
 import { getUserRolesForApp, listRoles } from '../../api/roles';
 import { listOrganizations } from '../../api/organizations';
+import { checkAccess } from '../../api/subscriptions';
 import { extractArray, extractData, extractPagination } from '../../api/helpers';
 import { User, App, Role } from '../../types';
+import ThemedSelect from '../../components/ThemedSelect';
 
 const LIMIT = 10;
 
@@ -49,7 +51,19 @@ export default function UsersPage() {
           listOrganizations(),
           listRoles('books'),
         ]);
-        setOrgs(extractArray<{ id: string; name: string }>(orgsRes));
+        const allOrgs = extractArray<{ id: string; name: string }>(orgsRes);
+        const accessChecks = await Promise.all(
+          allOrgs.map(async (org) => {
+            try {
+              const accessRes = await checkAccess(org.id, 'books');
+              const data = extractData<{ hasAccess: boolean }>(accessRes);
+              return data?.hasAccess === true;
+            } catch {
+              return false;
+            }
+          })
+        );
+        setOrgs(allOrgs.filter((_, i) => accessChecks[i]));
         setRoles(extractArray<{ slug: string; name: string }>(rolesRes));
       } catch { /* ignore */ }
     };
@@ -365,28 +379,21 @@ export default function UsersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Organization</label>
-                <select
+                <ThemedSelect
                   value={inviteForm.orgId || orgId || ''}
-                  onChange={(e) => setInviteForm({ ...inviteForm, orgId: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  {orgs.map((o) => (
-                    <option key={o.id} value={o.id}>{o.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setInviteForm({ ...inviteForm, orgId: v })}
+                  options={orgs.map((o) => ({ value: o.id, label: o.name }))}
+                  placeholder="Select an organization"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-                <select
+                <ThemedSelect
                   value={inviteForm.roleSlug}
-                  onChange={(e) => setInviteForm({ ...inviteForm, roleSlug: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">Select a role</option>
-                  {roles.map((r) => (
-                    <option key={r.slug} value={r.slug}>{r.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setInviteForm({ ...inviteForm, roleSlug: v })}
+                  options={roles.map((r) => ({ value: r.slug, label: r.name }))}
+                  placeholder="Select a role"
+                />
               </div>
               <button
                 onClick={handleInvite}

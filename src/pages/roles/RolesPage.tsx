@@ -26,6 +26,7 @@ import { getApp } from "../../api/apps";
 import { useAuth } from "../../contexts/AuthContext";
 import { extractArray, extractData } from "../../api/helpers";
 import { useToast } from "../../components/Toast";
+import ThemedSelect from "../../components/ThemedSelect";
 import { Role, Permission } from "../../types";
 
 type ActiveTab = "roles" | "assign" | "lookup" | "permissions";
@@ -233,11 +234,11 @@ export default function RolesPage() {
     }
   };
 
-  const fetchAllPermissions = async (mod?: string) => {
+  const fetchAllPermissions = async () => {
     setPermLoading(true);
     setPermError("");
     try {
-      const res = await listAllPermissions(mod || undefined);
+      const res = await listAllPermissions();
       const perms = extractArray<Permission>(res);
       // Only show books-related permissions
       setAllPermissions(perms.filter(p => p.slug?.startsWith('books.')));
@@ -254,9 +255,13 @@ export default function RolesPage() {
     }
   }, [activeTab]);
 
-  const handlePermModuleSearch = () => {
-    fetchAllPermissions(permModule || undefined);
-  };
+  const moduleOptions = Array.from(
+    new Set(allPermissions.map((p) => p.module).filter(Boolean))
+  ).sort();
+
+  const filteredPermissions = permModule
+    ? allPermissions.filter((p) => p.module === permModule)
+    : allPermissions;
 
   const actionColor = (action: string) => {
     switch (action) {
@@ -328,29 +333,42 @@ export default function RolesPage() {
           )}
 
           {!rolesLoading && !rolesError && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {roles.map((role) => (
-                <div
-                  key={role.id}
-                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between"
-                >
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{role.name}</h3>
-                    <p className="text-xs text-slate-400 font-mono mt-1">{role.slug}</p>
-                    <p className="text-sm text-slate-500 mt-2">{role.description}</p>
-                  </div>
-                  <button
-                    onClick={() => openPermissionsModal(role)}
-                    className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-all duration-200 ease-out self-start"
-                  >
-                    <Eye className="w-4 h-4" />
-                    View Permissions
-                  </button>
-                </div>
-              ))}
-              {roles.length === 0 && (
-                <p className="text-slate-400 col-span-full text-center py-8">No roles found.</p>
-              )}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3 font-medium text-slate-600">Name</th>
+                    <th className="px-6 py-3 font-medium text-slate-600">Slug</th>
+                    <th className="px-6 py-3 font-medium text-slate-600">Description</th>
+                    <th className="px-6 py-3 font-medium text-slate-600 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {roles.map((role) => (
+                    <tr key={role.id} className="hover:bg-slate-50 transition-all duration-200 ease-out">
+                      <td className="px-6 py-3 text-slate-900 font-medium">{role.name}</td>
+                      <td className="px-6 py-3 text-slate-500 font-mono text-xs">{role.slug}</td>
+                      <td className="px-6 py-3 text-slate-500">{role.description}</td>
+                      <td className="px-6 py-3 text-right">
+                        <button
+                          onClick={() => openPermissionsModal(role)}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-all duration-200 ease-out"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View Permissions
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {roles.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
+                        No roles found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -367,49 +385,33 @@ export default function RolesPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Organization</label>
-              <select
+              <ThemedSelect
                 value={assignForm.orgId}
-                onChange={(e) => {
-                  const orgId = e.target.value;
-                  setAssignForm({ ...assignForm, orgId, userId: '', appId: booksAppId });
-                  fetchOrgUsers(orgId);
+                onChange={(v) => {
+                  setAssignForm({ ...assignForm, orgId: v, userId: '', appId: booksAppId });
+                  fetchOrgUsers(v);
                 }}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
-              >
-                <option value="">Select an organization</option>
-                {orgs.map((o) => (
-                  <option key={o.id} value={o.id}>{o.name}</option>
-                ))}
-              </select>
+                options={orgs.map((o) => ({ value: o.id, label: o.name }))}
+                placeholder="Select an organization"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
-              <select
+              <ThemedSelect
                 value={assignForm.userId}
-                onChange={(e) => setAssignForm({ ...assignForm, userId: e.target.value })}
-                disabled={!assignForm.orgId}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
-              >
-                <option value="">{assignForm.orgId ? 'Select a user' : 'Select an org first'}</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
-                ))}
-              </select>
+                onChange={(v) => setAssignForm({ ...assignForm, userId: v })}
+                options={users.map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
+                placeholder={assignForm.orgId ? 'Select a user' : 'Select an org first'}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-              <select
+              <ThemedSelect
                 value={assignForm.roleId}
-                onChange={(e) => setAssignForm({ ...assignForm, roleId: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
-              >
-                <option value="">Select a role</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setAssignForm({ ...assignForm, roleId: v })}
+                options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                placeholder="Select a role"
+              />
             </div>
 
             {assignError && (
@@ -449,16 +451,12 @@ export default function RolesPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
-              <select
+              <ThemedSelect
                 value={lookupUserId}
-                onChange={(e) => setLookupUserId(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
-              >
-                <option value="">Select a user</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
-                ))}
-              </select>
+                onChange={(v) => setLookupUserId(v)}
+                options={users.map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
+                placeholder="Select a user"
+              />
             </div>
 
             {lookupError && (
@@ -527,23 +525,25 @@ export default function RolesPage() {
       {activeTab === "permissions" && (
         <div>
           <div className="flex items-center gap-3 mb-6">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Filter by module"
+            <div className="flex-1 max-w-sm">
+              <ThemedSelect
                 value={permModule}
-                onChange={(e) => setPermModule(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handlePermModuleSearch()}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                onChange={(v) => setPermModule(v)}
+                options={[
+                  { value: "", label: "All modules" },
+                  ...moduleOptions.map((m) => ({ value: m, label: m })),
+                ]}
+                placeholder="Filter by module"
               />
             </div>
-            <button
-              onClick={handlePermModuleSearch}
-              className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out"
-            >
-              Filter
-            </button>
+            {permModule && (
+              <button
+                onClick={() => setPermModule("")}
+                className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-all duration-200 ease-out"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           {permLoading && (
@@ -564,16 +564,16 @@ export default function RolesPage() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-3 font-medium text-slate-600">Name</th>
+                    <th className="px-6 py-3 font-medium text-slate-600">Description</th>
                     <th className="px-6 py-3 font-medium text-slate-600">Slug</th>
                     <th className="px-6 py-3 font-medium text-slate-600">Module</th>
                     <th className="px-6 py-3 font-medium text-slate-600">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {allPermissions.map((p) => (
+                  {filteredPermissions.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50 transition-all duration-200 ease-out">
-                      <td className="px-6 py-3 text-slate-900">{p.name}</td>
+                      <td className="px-6 py-3 text-slate-900">{p.description}</td>
                       <td className="px-6 py-3 text-slate-500 font-mono text-xs">{p.slug}</td>
                       <td className="px-6 py-3 text-slate-500">{p.module}</td>
                       <td className="px-6 py-3">
@@ -585,7 +585,7 @@ export default function RolesPage() {
                       </td>
                     </tr>
                   ))}
-                  {allPermissions.length === 0 && (
+                  {filteredPermissions.length === 0 && (
                     <tr>
                       <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
                         No permissions found.
@@ -677,7 +677,7 @@ export default function RolesPage() {
                             className="flex items-center justify-between px-4 py-3"
                           >
                             <div>
-                              <p className="text-sm font-medium text-slate-900">{p.name}</p>
+                              <p className="text-sm font-medium text-slate-900">{p.description || p.name}</p>
                               <p className="text-xs text-slate-400 font-mono">{p.slug}</p>
                             </div>
                             <span

@@ -49,7 +49,8 @@ export interface App {
 export interface Permission {
   id: string;
   slug: string;
-  name: string;
+  name?: string;
+  description?: string;
   module: string;
   action: string;
 }

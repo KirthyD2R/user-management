@@ -13,6 +13,7 @@ import { listApps } from '../../api/apps';
 import { listPlans } from '../../api/plans';
 import { extractArray, extractData } from '../../api/helpers';
 import { Organization, App, Plan } from '../../types';
+import ThemedSelect from '../../components/ThemedSelect';
 interface Sub {
   id: string;
   app?: { slug: string; name: string };
@@ -273,42 +274,30 @@ export default function SubscriptionsPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Organization</label>
-                <select
+                <ThemedSelect
                   value={createForm.orgId}
-                  onChange={(e) => setCreateForm({ ...createForm, orgId: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Select an organization</option>
-                  {orgOptions.map((o) => (
-                    <option key={o.id} value={o.id}>{o.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setCreateForm({ ...createForm, orgId: v })}
+                  options={orgOptions.map((o) => ({ value: o.id, label: o.name }))}
+                  placeholder="Select an organization"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">App</label>
-                <select
+                <ThemedSelect
                   value={createForm.appId}
-                  onChange={(e) => setCreateForm({ ...createForm, appId: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Select an app</option>
-                  {appOptions.map((a) => (
-                    <option key={a.id} value={a.id}>{a.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setCreateForm({ ...createForm, appId: v })}
+                  options={appOptions.map((a) => ({ value: a.id, label: a.name }))}
+                  placeholder="Select an app"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Plan</label>
-                <select
+                <ThemedSelect
                   value={createForm.planId}
-                  onChange={(e) => setCreateForm({ ...createForm, planId: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Select a plan</option>
-                  {planOptions.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setCreateForm({ ...createForm, planId: v })}
+                  options={planOptions.map((p) => ({ value: p.id, label: p.name }))}
+                  placeholder="Select a plan"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
@@ -360,16 +349,12 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">New Plan</label>
-                <select
+                <ThemedSelect
                   value={newPlanId}
-                  onChange={(e) => setNewPlanId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Select a plan</option>
-                  {planOptions.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setNewPlanId(v)}
+                  options={planOptions.map((p) => ({ value: p.id, label: p.name }))}
+                  placeholder="Select a plan"
+                />
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
