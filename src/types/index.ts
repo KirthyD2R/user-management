@@ -28,6 +28,7 @@ export interface Organization {
   pan: string;
   timezone: string;
   currency: string;
+  financialYearStart: string;
   status: string;
   logo: string;
   createdAt: string;

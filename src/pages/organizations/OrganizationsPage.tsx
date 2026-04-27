@@ -35,6 +35,20 @@ const TIMEZONES = [
   "Pacific/Auckland",
 ];
 const CURRENCIES = ["INR", "USD", "EUR", "GBP"];
+const FINANCIAL_YEAR_START_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 const emptyForm: Partial<Organization> = {
   name: "",
@@ -52,6 +66,7 @@ const emptyForm: Partial<Organization> = {
   pan: "",
   timezone: "",
   currency: "",
+  financialYearStart: "",
 };
 
 function slugify(text: string): string {
@@ -373,6 +388,11 @@ const OrganizationsPage: React.FC = () => {
               {renderField("State", "state")}
               {renderField("Country", "country")}
               {renderField("Postal Code", "postalCode")}
+              {renderField("GSTIN", "gstin")}
+              {renderField("PAN", "pan")}
+              {renderField("Currency", "currency", "select", CURRENCIES)}
+              {renderField("Financial Year Start", "financialYearStart", "select", FINANCIAL_YEAR_START_MONTHS)}
+              {renderField("Timezone", "timezone", "select", TIMEZONES)}
             </div>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
               <button
@@ -432,8 +452,9 @@ const OrganizationsPage: React.FC = () => {
               {renderField("Postal Code", "postalCode")}
               {renderField("GSTIN", "gstin")}
               {renderField("PAN", "pan")}
-              {renderField("Timezone", "timezone", "select", TIMEZONES)}
               {renderField("Currency", "currency", "select", CURRENCIES)}
+              {renderField("Financial Year Start", "financialYearStart", "select", FINANCIAL_YEAR_START_MONTHS)}
+              {renderField("Timezone", "timezone", "select", TIMEZONES)}
             </div>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
               <button
