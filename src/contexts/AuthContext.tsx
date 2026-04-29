@@ -17,6 +17,11 @@ interface AuthContextType {
     orgName: string;
     orgSlug: string;
     appSlug: string;
+    gstin: string;
+    pan: string;
+    currency: string;
+    financialYearStart: string;
+    timezone: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -71,6 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     orgName: string;
     orgSlug: string;
     appSlug: string;
+    gstin: string;
+    pan: string;
+    currency: string;
+    financialYearStart: string;
+    timezone: string;
   }) => {
     await authApi.register(data);
   };

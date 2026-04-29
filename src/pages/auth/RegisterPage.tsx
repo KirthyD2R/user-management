@@ -2,6 +2,38 @@ import { useState, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Lock, User, Building2 } from 'lucide-react';
 import { register } from '../../api/auth';
+import ThemedSelect from '../../components/ThemedSelect';
+
+const TIMEZONES = [
+  'Asia/Kolkata',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Asia/Tokyo',
+  'Asia/Shanghai',
+  'Asia/Dubai',
+  'Australia/Sydney',
+  'Pacific/Auckland',
+];
+const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP'];
+const FINANCIAL_YEAR_START_MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -12,6 +44,11 @@ export default function RegisterPage() {
     orgName: '',
     orgSlug: '',
     appSlug: 'books',
+    gstin: '',
+    pan: '',
+    currency: 'INR',
+    financialYearStart: 'April',
+    timezone: 'Asia/Kolkata',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -197,6 +234,74 @@ export default function RegisterPage() {
                     onChange={(e) => handleChange('appSlug', e.target.value)}
                     className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     placeholder="books"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="gstin" className="block text-sm font-medium text-slate-700 mb-1">
+                      GSTIN
+                    </label>
+                    <input
+                      id="gstin"
+                      type="text"
+                      required
+                      value={formData.gstin}
+                      onChange={(e) => handleChange('gstin', e.target.value)}
+                      className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      placeholder="22AAAAA0000A1Z5"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="pan" className="block text-sm font-medium text-slate-700 mb-1">
+                      PAN
+                    </label>
+                    <input
+                      id="pan"
+                      type="text"
+                      required
+                      value={formData.pan}
+                      onChange={(e) => handleChange('pan', e.target.value)}
+                      className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      placeholder="AAAAA0000A"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Currency
+                  </label>
+                  <ThemedSelect
+                    value={formData.currency}
+                    onChange={(v) => handleChange('currency', v)}
+                    options={CURRENCIES.map((o) => ({ value: o, label: o }))}
+                    placeholder="Select Currency"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Financial Year Start
+                  </label>
+                  <ThemedSelect
+                    value={formData.financialYearStart}
+                    onChange={(v) => handleChange('financialYearStart', v)}
+                    options={FINANCIAL_YEAR_START_MONTHS.map((o) => ({ value: o, label: o }))}
+                    placeholder="Select Financial Year Start"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Timezone
+                  </label>
+                  <ThemedSelect
+                    value={formData.timezone}
+                    onChange={(v) => handleChange('timezone', v)}
+                    options={TIMEZONES.map((o) => ({ value: o, label: o }))}
+                    placeholder="Select Timezone"
                   />
                 </div>
 

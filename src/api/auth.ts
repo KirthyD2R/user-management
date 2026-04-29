@@ -14,6 +14,11 @@ export const register = async (data: {
   orgName: string;
   orgSlug: string;
   appSlug: string;
+  gstin: string;
+  pan: string;
+  currency: string;
+  financialYearStart: string;
+  timezone: string;
 }): Promise<ApiResponse<LoginResponse>> => {
   const response = await client.post("/api/auth/register", data);
   return response.data;
