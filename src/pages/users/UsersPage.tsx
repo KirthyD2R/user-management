@@ -1,23 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Pencil, Power, AppWindow, Search, X, Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Pencil, Power, AppWindow, Search, X, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { listOrgUsers, lookupUser, inviteUser, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
+import { listOrgUsers, inviteUser, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
 import { getUserRolesForApp, listRoles } from '../../api/roles';
 import { listOrganizations } from '../../api/organizations';
 import { checkAccess } from '../../api/subscriptions';
-import { extractArray, extractData, extractPagination } from '../../api/helpers';
-import { User, App, Role } from '../../types';
+import { extractArray, extractData, normalizeUser } from '../../api/helpers';
+import { User, App } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
+import Pagination from '../../components/Pagination';
 
-const LIMIT = 10;
+const LIMIT = 20;
 
 export default function UsersPage() {
   const { user: authUser } = useAuth();
   const orgId = authUser?.orgId;
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -76,7 +76,7 @@ export default function UsersPage() {
     setError('');
     try {
       const res = await listOrgUsers(orgId, 1, 100);
-      const allUsers = extractArray<User>(res);
+      const allUsers = extractArray<User>(res).map(normalizeUser);
 
       // Filter to only users that have roles in the books app
       const usersWithAccess = await Promise.all(
@@ -91,42 +91,34 @@ export default function UsersPage() {
         })
       );
       const booksUsers = usersWithAccess.filter((u): u is User => u !== null);
-
-      // Client-side pagination
-      const start = (page - 1) * LIMIT;
-      setUsers(booksUsers.slice(start, start + LIMIT));
-      setTotalPages(Math.max(1, Math.ceil(booksUsers.length / LIMIT)));
+      setAllUsers(booksUsers);
     } catch {
       setError('Failed to load users.');
     } finally {
       setLoading(false);
     }
-  }, [orgId, page]);
+  }, [orgId]);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      fetchUsers();
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      const res = await lookupUser(searchQuery.trim());
-      const found = extractData<User>(res);
-      setUsers(found ? [found] : []);
-      setTotalPages(1);
-      setPage(1);
-    } catch {
-      setError('User not found.');
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Reset to the first page whenever the search term changes.
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
+
+  // Client-side partial search (case-insensitive) across name and email.
+  const query = searchQuery.trim().toLowerCase();
+  const filteredUsers = query
+    ? allUsers.filter(
+        (u) =>
+          `${u.firstName} ${u.lastName}`.toLowerCase().includes(query) ||
+          (u.email || '').toLowerCase().includes(query)
+      )
+    : allUsers;
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / LIMIT));
+  const users = filteredUsers.slice((page - 1) * LIMIT, page * LIMIT);
 
   const handleInvite = async () => {
     setError('');
@@ -210,7 +202,7 @@ export default function UsersPage() {
           className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out"
         >
           <Plus className="w-4 h-4" />
-          Invite User
+          Create User
         </button>
       </div>
 
@@ -220,22 +212,15 @@ export default function UsersPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by email..."
+            placeholder="Search by name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
-        <button
-          onClick={handleSearch}
-          className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all duration-200 ease-out"
-        >
-          Search
-        </button>
         {searchQuery && (
           <button
-            onClick={() => { setSearchQuery(''); fetchUsers(); }}
+            onClick={() => setSearchQuery('')}
             className="px-4 py-2 text-slate-500 hover:text-slate-700 transition-all duration-200 ease-out"
           >
             Clear
@@ -314,27 +299,12 @@ export default function UsersPage() {
         </table>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-6 py-3 bg-slate-50 border-t border-slate-200">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </button>
-          <span className="text-sm text-slate-600">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={filteredUsers.length}
+          onPageChange={setPage}
+        />
       </div>
 
       {/* Invite User Modal */}
@@ -342,7 +312,7 @@ export default function UsersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Invite User</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Create User</h2>
               <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>

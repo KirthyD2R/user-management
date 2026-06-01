@@ -4,10 +4,10 @@ import {
   Power,
   Plus,
   X,
-  ChevronLeft,
-  ChevronRight,
+  Search,
 } from "lucide-react";
 import ThemedSelect from "../../components/ThemedSelect";
+import Pagination from "../../components/Pagination";
 import {
   listOrganizations,
   createOrganization,
@@ -95,6 +95,7 @@ function StatusBadge({ status }: { status: string }) {
 const OrganizationsPage: React.FC = () => {
   const [allFilteredOrgs, setAllFilteredOrgs] = useState<Organization[]>([]);
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,11 +108,19 @@ const OrganizationsPage: React.FC = () => {
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const LIMIT = 10;
+  const LIMIT = 20;
   const APP_SLUG = "books";
 
-  const totalPages = Math.max(1, Math.ceil(allFilteredOrgs.length / LIMIT));
-  const orgs = allFilteredOrgs.slice((page - 1) * LIMIT, page * LIMIT);
+  // Client-side partial search (case-insensitive) across the main org fields.
+  const query = searchQuery.trim().toLowerCase();
+  const filteredOrgs = query
+    ? allFilteredOrgs.filter((o) =>
+        [o.name, o.email, o.city, o.state, o.country, o.industry]
+          .some((f) => (f || "").toLowerCase().includes(query))
+      )
+    : allFilteredOrgs;
+  const totalPages = Math.max(1, Math.ceil(filteredOrgs.length / LIMIT));
+  const orgs = filteredOrgs.slice((page - 1) * LIMIT, page * LIMIT);
 
   const fetchOrgs = async () => {
     setLoading(true);
@@ -151,6 +160,11 @@ const OrganizationsPage: React.FC = () => {
   useEffect(() => {
     fetchOrgs();
   }, []);
+
+  // Reset to the first page whenever the search term changes.
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -259,6 +273,28 @@ const OrganizationsPage: React.FC = () => {
         </button>
       </div>
 
+      {/* Search */}
+      <div className="flex gap-2 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by name, email, city, country..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="px-4 py-2 text-slate-500 hover:text-slate-700 transition-all duration-200 ease-out"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
       {/* Error */}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
@@ -331,27 +367,12 @@ const OrganizationsPage: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-6 py-3 border-t border-slate-200 bg-slate-50">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </button>
-          <span className="text-sm text-slate-600">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={filteredOrgs.length}
+          onPageChange={setPage}
+        />
       </div>
 
       {/* Create Organization Modal */}

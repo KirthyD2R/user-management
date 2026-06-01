@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, BarChart3, X, Loader2, Users, Check } from 'lucide-react';
+import { Eye, BarChart3, X, Loader2, Users, Check, Search } from 'lucide-react';
 import {
   listPlans,
   getPlanLimits,
@@ -35,6 +35,7 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<PlanData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   // Limits modal
@@ -96,6 +97,14 @@ export default function PlansPage() {
 
   const highlightPlan = (_slug: string) => 'border-slate-200';
 
+  // Client-side partial search (case-insensitive) across plan name and slug.
+  const query = search.trim().toLowerCase();
+  const filteredPlans = query
+    ? plans.filter((p) =>
+        [p.name, p.slug].some((f) => (f || '').toLowerCase().includes(query))
+      )
+    : plans;
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -117,6 +126,28 @@ export default function PlansPage() {
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">{error}</div>
       )}
+
+      {/* Search */}
+      <div className="flex gap-2 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search plans..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="px-4 py-2 text-slate-500 hover:text-slate-700 transition-all duration-200 ease-out"
+          >
+            Clear
+          </button>
+        )}
+      </div>
 
       {/* Billing Cycle Toggle */}
       <div className="flex items-center justify-center mb-8">
@@ -146,11 +177,11 @@ export default function PlansPage() {
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
         </div>
-      ) : plans.length === 0 ? (
+      ) : filteredPlans.length === 0 ? (
         <div className="text-center py-16 text-slate-500 text-sm">No plans found.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {plans.map((plan) => {
+          {filteredPlans.map((plan) => {
             const price = billingCycle === 'monthly' ? plan.pricing.monthly : plan.pricing.yearly;
             const perMonth = billingCycle === 'yearly' ? Math.round(plan.pricing.yearly / 12) : plan.pricing.monthly;
 

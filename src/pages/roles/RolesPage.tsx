@@ -27,7 +27,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import { extractArray, extractData } from "../../api/helpers";
 import { useToast } from "../../components/Toast";
 import ThemedSelect from "../../components/ThemedSelect";
+import Pagination from "../../components/Pagination";
 import { Role, Permission } from "../../types";
+
+const LIST_LIMIT = 20;
 
 type ActiveTab = "roles" | "assign" | "lookup" | "permissions";
 
@@ -38,6 +41,8 @@ export default function RolesPage() {
   const APP_PREFIX = "books";
   const [rolesLoading, setRolesLoading] = useState(false);
   const [rolesError, setRolesError] = useState("");
+  const [roleSearch, setRoleSearch] = useState("");
+  const [rolePage, setRolePage] = useState(1);
 
   // Dropdown data
   const [orgs, setOrgs] = useState<{ id: string; name: string }[]>([]);
@@ -68,6 +73,8 @@ export default function RolesPage() {
 
   const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
   const [permModule, setPermModule] = useState("");
+  const [permSearch, setPermSearch] = useState("");
+  const [permPage, setPermPage] = useState(1);
   const [permLoading, setPermLoading] = useState(false);
   const [permError, setPermError] = useState("");
 
@@ -255,13 +262,43 @@ export default function RolesPage() {
     }
   }, [activeTab]);
 
+  // Reset to the first page whenever a filter/search term changes.
+  useEffect(() => {
+    setRolePage(1);
+  }, [roleSearch]);
+
+  useEffect(() => {
+    setPermPage(1);
+  }, [permSearch, permModule]);
+
   const moduleOptions = Array.from(
     new Set(allPermissions.map((p) => p.module).filter(Boolean))
   ).sort();
 
-  const filteredPermissions = permModule
-    ? allPermissions.filter((p) => p.module === permModule)
-    : allPermissions;
+  // ----- Roles tab: client-side partial search + pagination -----
+  const roleQuery = roleSearch.trim().toLowerCase();
+  const filteredRoles = roleQuery
+    ? roles.filter((r) =>
+        [r.name, r.slug, r.description].some((f) => (f || "").toLowerCase().includes(roleQuery))
+      )
+    : roles;
+  const roleTotalPages = Math.max(1, Math.ceil(filteredRoles.length / LIST_LIMIT));
+  const pagedRoles = filteredRoles.slice((rolePage - 1) * LIST_LIMIT, rolePage * LIST_LIMIT);
+
+  // ----- Permissions tab: module filter + partial search + pagination -----
+  const permQuery = permSearch.trim().toLowerCase();
+  const filteredPermissions = allPermissions.filter((p) => {
+    if (permModule && p.module !== permModule) return false;
+    if (!permQuery) return true;
+    return [p.description, p.name, p.slug, p.module, p.action].some((f) =>
+      (f || "").toLowerCase().includes(permQuery)
+    );
+  });
+  const permTotalPages = Math.max(1, Math.ceil(filteredPermissions.length / LIST_LIMIT));
+  const pagedPermissions = filteredPermissions.slice(
+    (permPage - 1) * LIST_LIMIT,
+    permPage * LIST_LIMIT
+  );
 
   const actionColor = (action: string) => {
     switch (action) {
@@ -319,6 +356,28 @@ export default function RolesPage() {
         <div>
           {/* Roles are filtered to books app via API: /api/roles?prefix=books */}
 
+          {/* Search */}
+          <div className="flex gap-2 mb-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search roles by name, slug, description..."
+                value={roleSearch}
+                onChange={(e) => setRoleSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            {roleSearch && (
+              <button
+                onClick={() => setRoleSearch("")}
+                className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-all duration-200 ease-out"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
           {rolesLoading && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 text-primary-600 animate-spin" />
@@ -338,16 +397,14 @@ export default function RolesPage() {
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="px-6 py-3 font-medium text-slate-600">Name</th>
-                    <th className="px-6 py-3 font-medium text-slate-600">Slug</th>
                     <th className="px-6 py-3 font-medium text-slate-600">Description</th>
                     <th className="px-6 py-3 font-medium text-slate-600 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {roles.map((role) => (
+                  {pagedRoles.map((role) => (
                     <tr key={role.id} className="hover:bg-slate-50 transition-all duration-200 ease-out">
                       <td className="px-6 py-3 text-slate-900 font-medium">{role.name}</td>
-                      <td className="px-6 py-3 text-slate-500 font-mono text-xs">{role.slug}</td>
                       <td className="px-6 py-3 text-slate-500">{role.description}</td>
                       <td className="px-6 py-3 text-right">
                         <button
@@ -360,7 +417,7 @@ export default function RolesPage() {
                       </td>
                     </tr>
                   ))}
-                  {roles.length === 0 && (
+                  {filteredRoles.length === 0 && (
                     <tr>
                       <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
                         No roles found.
@@ -369,6 +426,12 @@ export default function RolesPage() {
                   )}
                 </tbody>
               </table>
+              <Pagination
+                page={rolePage}
+                totalPages={roleTotalPages}
+                total={filteredRoles.length}
+                onPageChange={setRolePage}
+              />
             </div>
           )}
         </div>
@@ -524,8 +587,18 @@ export default function RolesPage() {
       {/* ===== ALL PERMISSIONS TAB ===== */}
       {activeTab === "permissions" && (
         <div>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 max-w-sm">
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search permissions..."
+                value={permSearch}
+                onChange={(e) => setPermSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div className="w-48">
               <ThemedSelect
                 value={permModule}
                 onChange={(v) => setPermModule(v)}
@@ -536,9 +609,9 @@ export default function RolesPage() {
                 placeholder="Filter by module"
               />
             </div>
-            {permModule && (
+            {(permModule || permSearch) && (
               <button
-                onClick={() => setPermModule("")}
+                onClick={() => { setPermModule(""); setPermSearch(""); }}
                 className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-all duration-200 ease-out"
               >
                 Clear
@@ -565,16 +638,14 @@ export default function RolesPage() {
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="px-6 py-3 font-medium text-slate-600">Description</th>
-                    <th className="px-6 py-3 font-medium text-slate-600">Slug</th>
                     <th className="px-6 py-3 font-medium text-slate-600">Module</th>
                     <th className="px-6 py-3 font-medium text-slate-600">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredPermissions.map((p) => (
+                  {pagedPermissions.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50 transition-all duration-200 ease-out">
                       <td className="px-6 py-3 text-slate-900">{p.description}</td>
-                      <td className="px-6 py-3 text-slate-500 font-mono text-xs">{p.slug}</td>
                       <td className="px-6 py-3 text-slate-500">{p.module}</td>
                       <td className="px-6 py-3">
                         <span
@@ -594,6 +665,12 @@ export default function RolesPage() {
                   )}
                 </tbody>
               </table>
+              <Pagination
+                page={permPage}
+                totalPages={permTotalPages}
+                total={filteredPermissions.length}
+                onPageChange={setPermPage}
+              />
             </div>
           )}
         </div>

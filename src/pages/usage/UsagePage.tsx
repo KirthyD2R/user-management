@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, Plus, RotateCcw, CheckCircle, AlertCircle } from 'lucide-react';
+import { BarChart3, Plus, RotateCcw, CheckCircle, AlertCircle, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getOrgUsage, incrementUsage, checkAndIncrement, resetUsage } from '../../api/usage';
 import { extractArray } from '../../api/helpers';
+import Pagination from '../../components/Pagination';
+
+const LIMIT = 20;
 
 interface UsageRecord {
   id: string;
@@ -21,6 +24,8 @@ export default function UsagePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [appSlug, setAppSlug] = useState('books');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [period, setPeriod] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -62,6 +67,21 @@ export default function UsagePage() {
   useEffect(() => {
     fetchUsage();
   }, [orgId, appSlug, period]);
+
+  // Reset to the first page whenever the search term changes.
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  // Client-side partial search (case-insensitive) across usage key and app.
+  const query = search.trim().toLowerCase();
+  const filteredRecords = query
+    ? usageRecords.filter((r) =>
+        [r.usageKey, r.appSlug].some((f) => (f || '').toLowerCase().includes(query))
+      )
+    : usageRecords;
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / LIMIT));
+  const pagedRecords = filteredRecords.slice((page - 1) * LIMIT, page * LIMIT);
 
   const handleIncrement = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,6 +169,14 @@ export default function UsagePage() {
             <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)}
               className="field" />
           </div>
+          <div className="flex-1 min-w-[160px]">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Search</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search usage key..." className="field pl-10" />
+            </div>
+          </div>
           <button onClick={fetchUsage} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium transition-all duration-200 ease-out">
             Refresh
           </button>
@@ -159,7 +187,7 @@ export default function UsagePage() {
       <div className="bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-500">Loading usage data...</div>
-        ) : usageRecords.length === 0 ? (
+        ) : filteredRecords.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <BarChart3 className="w-12 h-12 mx-auto mb-3 text-slate-300" />
             <p>No usage records found for this period</p>
@@ -177,7 +205,7 @@ export default function UsagePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {usageRecords.map((record, idx) => (
+              {pagedRecords.map((record, idx) => (
                 <tr key={record.id || idx} className="hover:bg-slate-50">
                   <td className="px-6 py-4 text-sm font-medium text-slate-900">{record.usageKey}</td>
                   <td className="px-6 py-4 text-sm text-slate-500">{record.appSlug}</td>
@@ -192,6 +220,12 @@ export default function UsagePage() {
               ))}
             </tbody>
           </table>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={filteredRecords.length}
+            onPageChange={setPage}
+          />
           </div>
         )}
       </div>

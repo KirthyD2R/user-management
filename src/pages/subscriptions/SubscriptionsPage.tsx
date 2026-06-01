@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, ArrowUpDown, Power, X, Loader2 } from 'lucide-react';
+import { Plus, ArrowUpDown, Power, X, Loader2, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   createSubscription,
@@ -14,6 +14,9 @@ import { listPlans } from '../../api/plans';
 import { extractArray, extractData } from '../../api/helpers';
 import { Organization, App, Plan } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
+import Pagination from '../../components/Pagination';
+
+const LIMIT = 20;
 interface Sub {
   id: string;
   app?: { slug: string; name: string };
@@ -30,6 +33,8 @@ export default function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<Sub[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   // Create modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -151,6 +156,21 @@ export default function SubscriptionsPage() {
     }
   };
 
+  // Reset to the first page whenever the search term changes.
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  // Client-side partial search (case-insensitive) across app, plan and status.
+  const query = search.trim().toLowerCase();
+  const filteredSubs = query
+    ? subscriptions.filter((s) =>
+        [s.app?.name, s.plan?.name, s.status].some((f) => (f || '').toLowerCase().includes(query))
+      )
+    : subscriptions;
+  const totalPages = Math.max(1, Math.ceil(filteredSubs.length / LIMIT));
+  const pagedSubs = filteredSubs.slice((page - 1) * LIMIT, page * LIMIT);
+
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
       active: 'bg-green-100 text-green-700',
@@ -181,13 +201,35 @@ export default function SubscriptionsPage() {
         </div>
       )}
 
+      {/* Search */}
+      <div className="flex gap-2 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by app, plan or status..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="px-4 py-2 text-slate-500 hover:text-slate-700 transition-all duration-200 ease-out"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
       {/* Subscriptions Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
           </div>
-        ) : subscriptions.length === 0 ? (
+        ) : filteredSubs.length === 0 ? (
           <div className="text-center py-16 text-slate-500 text-sm">
             No subscriptions found.
           </div>
@@ -206,7 +248,7 @@ export default function SubscriptionsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {subscriptions.map((sub) => (
+                {pagedSubs.map((sub) => (
                   <tr key={sub.id} className="hover:bg-slate-50 transition">
                     <td className="px-6 py-4 font-medium text-slate-900">{sub.app?.name || '-'}</td>
                     <td className="px-6 py-4 text-slate-700">{sub.plan?.name || '-'}</td>
@@ -254,6 +296,12 @@ export default function SubscriptionsPage() {
                 ))}
               </tbody>
             </table>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              total={filteredSubs.length}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </div>

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Pencil, X, AppWindow, Globe, Settings, Tag, Users, Shield, Loader2 } from 'lucide-react';
+import { Pencil, X, AppWindow, Users, Shield, Loader2, Search } from 'lucide-react';
 import { getApp, updateApp } from '../../api/apps';
 import { listOrgUsers } from '../../api/users';
 import { getUserRolesForApp } from '../../api/roles';
 import { listOrganizations } from '../../api/organizations';
 import { useAuth } from '../../contexts/AuthContext';
-import { extractData, extractArray } from '../../api/helpers';
+import { extractData, extractArray, normalizeUser } from '../../api/helpers';
+import Pagination from '../../components/Pagination';
+
+const USERS_LIMIT = 20;
 
 interface App {
   id: string;
@@ -53,6 +56,8 @@ export default function AppsPage() {
   // Users state
   const [appUsers, setAppUsers] = useState<UserWithRole[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [userPage, setUserPage] = useState(1);
 
   useEffect(() => {
     fetchApp();
@@ -65,6 +70,11 @@ export default function AppsPage() {
       fetchAppUsers(orgId);
     }
   }, [selectedOrgId, authUser?.orgId]);
+
+  // Reset to the first page when the search term or org changes.
+  useEffect(() => {
+    setUserPage(1);
+  }, [userSearch, selectedOrgId]);
 
   const fetchOrgs = async () => {
     try {
@@ -80,7 +90,7 @@ export default function AppsPage() {
     setUsersLoading(true);
     try {
       const res = await listOrgUsers(orgId);
-      const users = extractArray<User>(res);
+      const users = extractArray<User>(res).map(normalizeUser);
       // For each user, fetch their roles for the books app
       const usersWithRoles: UserWithRole[] = users.map(u => ({
         ...u,
@@ -173,6 +183,19 @@ export default function AppsPage() {
     );
   }
 
+  // Client-side partial search (case-insensitive) across name, email and role names.
+  const userQuery = userSearch.trim().toLowerCase();
+  const filteredUsers = userQuery
+    ? appUsers.filter(
+        (u) =>
+          `${u.firstName} ${u.lastName}`.toLowerCase().includes(userQuery) ||
+          (u.email || '').toLowerCase().includes(userQuery) ||
+          u.roles.some((r) => (r.name || '').toLowerCase().includes(userQuery))
+      )
+    : appUsers;
+  const usersTotalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_LIMIT));
+  const pagedUsers = filteredUsers.slice((userPage - 1) * USERS_LIMIT, userPage * USERS_LIMIT);
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -207,6 +230,16 @@ export default function AppsPage() {
             <h2 className="text-lg font-semibold text-gray-900">Users with access to Books</h2>
           </div>
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
             <select
               value={selectedOrgId}
               onChange={(e) => setSelectedOrgId(e.target.value)}
@@ -217,7 +250,7 @@ export default function AppsPage() {
                 <option key={org.id} value={org.id}>{org.name}</option>
               ))}
             </select>
-            <span className="text-sm text-gray-500">{appUsers.length} user{appUsers.length !== 1 ? 's' : ''}</span>
+            <span className="text-sm text-gray-500">{filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''}</span>
           </div>
         </div>
         {usersLoading ? (
@@ -225,9 +258,10 @@ export default function AppsPage() {
             <Loader2 className="w-5 h-5 animate-spin" />
             Loading users and roles...
           </div>
-        ) : appUsers.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No users found with roles in this app.</div>
         ) : (
+          <>
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -238,7 +272,7 @@ export default function AppsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {appUsers.map((u) => (
+              {pagedUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">{u.firstName} {u.lastName}</td>
                   <td className="px-6 py-4 text-gray-600">{u.email}</td>
@@ -263,6 +297,13 @@ export default function AppsPage() {
               ))}
             </tbody>
           </table>
+          <Pagination
+            page={userPage}
+            totalPages={usersTotalPages}
+            total={filteredUsers.length}
+            onPageChange={setUserPage}
+          />
+          </>
         )}
       </div>
 
