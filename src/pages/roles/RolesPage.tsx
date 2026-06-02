@@ -28,11 +28,11 @@ import { extractArray, extractData } from "../../api/helpers";
 import { useToast } from "../../components/Toast";
 import ThemedSelect from "../../components/ThemedSelect";
 import Pagination from "../../components/Pagination";
-import { Role, Permission } from "../../types";
+import { Role, Permission, User } from "../../types";
 
 const LIST_LIMIT = 20;
 
-type ActiveTab = "roles" | "assign" | "lookup" | "permissions";
+type ActiveTab = "roles" | "assign" | "lookup" | "rolelookup" | "permissions";
 
 export default function RolesPage() {
   const { user: authUser } = useAuth();
@@ -70,6 +70,26 @@ export default function RolesPage() {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
   const [lookupDone, setLookupDone] = useState(false);
+
+  // "Users by Role" tab state.
+  const [lookupRoleId, setLookupRoleId] = useState("");
+  const [roleUsers, setRoleUsers] = useState<User[]>([]);
+  const [roleUsersLoading, setRoleUsersLoading] = useState(false);
+  const [roleUsersDone, setRoleUsersDone] = useState(false);
+
+  // user -> assigned roles map for the current org (lazy-built, cached). Powers
+  // "users by role" lookup and the per-permission "View Users" popup.
+  const [userRolesMap, setUserRolesMap] = useState<Record<string, { roleId: string; roleName: string }[]>>({});
+  const [userRolesLoaded, setUserRolesLoaded] = useState(false);
+
+  // permission slug -> roles that grant it (lazy-built when Permissions tab opens).
+  const [permRolesMap, setPermRolesMap] = useState<Record<string, { id: string; name: string }[]>>({});
+  const [permIndexLoading, setPermIndexLoading] = useState(false);
+
+  // Per-permission "View Users" popup.
+  const [permUsersModal, setPermUsersModal] = useState<Permission | null>(null);
+  const [permUsersLoading, setPermUsersLoading] = useState(false);
+  const [permUsers, setPermUsers] = useState<User[]>([]);
 
   const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
   const [permModule, setPermModule] = useState("");
@@ -256,9 +276,99 @@ export default function RolesPage() {
     }
   };
 
+  // Stable key for a permission across the different endpoints that return it.
+  const permKey = (p: Permission) => p.slug || p.id;
+
+  // Build permission -> roles index by reading each role's permissions once.
+  const fetchPermRolesIndex = async () => {
+    setPermIndexLoading(true);
+    try {
+      const rolesList = roles.length ? roles : extractArray<Role>(await listRoles(APP_PREFIX));
+      const map: Record<string, { id: string; name: string }[]> = {};
+      await Promise.all(
+        rolesList.map(async (role) => {
+          try {
+            const res = await getRolePermissions(role.id);
+            extractArray<Permission>(res).forEach((p) => {
+              const key = permKey(p);
+              if (!map[key]) map[key] = [];
+              map[key].push({ id: role.id, name: role.name });
+            });
+          } catch { /* skip role on error */ }
+        })
+      );
+      setPermRolesMap(map);
+    } finally {
+      setPermIndexLoading(false);
+    }
+  };
+
+  // Lazily build (and cache) the user -> roles map for the current org's users.
+  const ensureUserRolesMap = async (): Promise<Record<string, { roleId: string; roleName: string }[]>> => {
+    if (userRolesLoaded) return userRolesMap;
+    const map: Record<string, { roleId: string; roleName: string }[]> = {};
+    await Promise.all(
+      users.map(async (u) => {
+        try {
+          const res: any = await getUserRolesForApp(u.id, lookupAppSlug);
+          const arr = res?.data?.roles ?? extractArray<any>(res);
+          map[u.id] = (arr || []).map((r: any) => ({
+            roleId: r.roleId || r.id,
+            roleName: r.roleName || r.name || r.roleSlug || r.slug,
+          }));
+        } catch {
+          map[u.id] = [];
+        }
+      })
+    );
+    setUserRolesMap(map);
+    setUserRolesLoaded(true);
+    return map;
+  };
+
+  const handleRoleLookup = async () => {
+    if (!lookupRoleId) {
+      showToast("Please select a role.", "error");
+      return;
+    }
+    setRoleUsersLoading(true);
+    setRoleUsersDone(false);
+    try {
+      const map = await ensureUserRolesMap();
+      const matched = users.filter((u) =>
+        (map[u.id] || []).some((r) => r.roleId === lookupRoleId)
+      );
+      setRoleUsers(matched as User[]);
+      setRoleUsersDone(true);
+    } catch {
+      showToast("Failed to look up users for this role.", "error");
+    } finally {
+      setRoleUsersLoading(false);
+    }
+  };
+
+  const openPermUsersModal = async (perm: Permission) => {
+    setPermUsersModal(perm);
+    setPermUsers([]);
+    setPermUsersLoading(true);
+    try {
+      const map = await ensureUserRolesMap();
+      const roleIds = (permRolesMap[permKey(perm)] || []).map((r) => r.id);
+      const matched = users.filter((u) =>
+        (map[u.id] || []).some((r) => roleIds.includes(r.roleId))
+      );
+      setPermUsers(matched as User[]);
+    } catch {
+      showToast("Failed to load users for this permission.", "error");
+    } finally {
+      setPermUsersLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "permissions") {
       fetchAllPermissions();
+      fetchPermRolesIndex();
     }
   }, [activeTab]);
 
@@ -319,6 +429,7 @@ export default function RolesPage() {
     { key: "roles", label: "Roles", icon: <Shield className="w-4 h-4" /> },
     { key: "assign", label: "Assign Role", icon: <UserPlus className="w-4 h-4" /> },
     { key: "lookup", label: "User Lookup", icon: <Users className="w-4 h-4" /> },
+    { key: "rolelookup", label: "Users by Role", icon: <Users className="w-4 h-4" /> },
     { key: "permissions", label: "All Permissions", icon: <List className="w-4 h-4" /> },
   ];
 
@@ -584,6 +695,68 @@ export default function RolesPage() {
         </div>
       )}
 
+      {/* ===== USERS BY ROLE TAB ===== */}
+      {activeTab === "rolelookup" && (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-lg">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary-600" />
+            Users by Role
+          </h2>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+              <ThemedSelect
+                value={lookupRoleId}
+                onChange={(v) => setLookupRoleId(v)}
+                options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                placeholder="Select a role"
+              />
+            </div>
+
+            <button
+              onClick={handleRoleLookup}
+              disabled={roleUsersLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50"
+            >
+              {roleUsersLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+              Look Up
+            </button>
+
+            {roleUsersDone && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-slate-700 mb-3">
+                  Users ({roleUsers.length})
+                </p>
+                {roleUsers.length === 0 ? (
+                  <p className="text-sm text-slate-400">No users in this organization have this role.</p>
+                ) : (
+                  <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden">
+                    {roleUsers.map((u) => (
+                      <div key={u.id} className="flex items-center gap-3 px-4 py-2.5">
+                        <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-semibold">
+                          {(u.firstName?.[0] || "") + (u.lastName?.[0] || "")}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-900 truncate">
+                            {u.firstName} {u.lastName}
+                          </p>
+                          <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ===== ALL PERMISSIONS TAB ===== */}
       {activeTab === "permissions" && (
         <div>
@@ -640,10 +813,14 @@ export default function RolesPage() {
                     <th className="px-6 py-3 font-medium text-slate-600">Description</th>
                     <th className="px-6 py-3 font-medium text-slate-600">Module</th>
                     <th className="px-6 py-3 font-medium text-slate-600">Action</th>
+                    <th className="px-6 py-3 font-medium text-slate-600">Roles</th>
+                    <th className="px-6 py-3 font-medium text-slate-600 text-right">Users</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {pagedPermissions.map((p) => (
+                  {pagedPermissions.map((p) => {
+                    const permRoles = permRolesMap[permKey(p)] || [];
+                    return (
                     <tr key={p.id} className="hover:bg-slate-50 transition-all duration-200 ease-out">
                       <td className="px-6 py-3 text-slate-900">{p.description}</td>
                       <td className="px-6 py-3 text-slate-500">{p.module}</td>
@@ -654,11 +831,39 @@ export default function RolesPage() {
                           {p.action}
                         </span>
                       </td>
+                      <td className="px-6 py-3">
+                        {permIndexLoading ? (
+                          <Loader2 className="w-4 h-4 text-slate-300 animate-spin" />
+                        ) : permRoles.length === 0 ? (
+                          <span className="text-slate-300">—</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {permRoles.map((r) => (
+                              <span
+                                key={r.id}
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600"
+                              >
+                                {r.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <button
+                          onClick={() => openPermUsersModal(p)}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-all duration-200 ease-out"
+                        >
+                          <Users className="w-4 h-4" />
+                          View Users
+                        </button>
+                      </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {filteredPermissions.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
+                      <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
                         No permissions found.
                       </td>
                     </tr>
@@ -709,6 +914,59 @@ export default function RolesPage() {
                 )}
                 OK
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== PERMISSION USERS MODAL ===== */}
+      {permUsersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Users with permission
+                </h3>
+                <p className="text-xs text-slate-400 font-mono mt-0.5">
+                  {permUsersModal.description || permUsersModal.name || permUsersModal.slug}
+                </p>
+              </div>
+              <button
+                onClick={() => setPermUsersModal(null)}
+                className="p-1 rounded hover:bg-slate-100 transition-all duration-200 ease-out"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-6">
+              {permUsersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 text-primary-600 animate-spin" />
+                  <span className="ml-2 text-slate-500">Loading users...</span>
+                </div>
+              ) : permUsers.length === 0 ? (
+                <p className="text-slate-400 text-center py-8">
+                  No users in this organization have this permission.
+                </p>
+              ) : (
+                <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden">
+                  {permUsers.map((u) => (
+                    <div key={u.id} className="flex items-center gap-3 px-4 py-2.5">
+                      <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-semibold">
+                        {(u.firstName?.[0] || "") + (u.lastName?.[0] || "")}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {u.firstName} {u.lastName}
+                        </p>
+                        <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
