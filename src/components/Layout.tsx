@@ -132,7 +132,7 @@ export default function Layout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className={`flex-1 px-3 py-4 space-y-1 overflow-y-auto ${collapsed ? 'lg:overflow-visible' : ''}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
@@ -141,8 +141,8 @@ export default function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
-                title={collapsed ? item.label : undefined}
-                className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ease-out ${collapsed ? 'lg:justify-center lg:px-2' : ''} ${
+                aria-label={item.label}
+                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ease-out ${collapsed ? 'lg:justify-center lg:px-2' : ''} ${
                   isActive
                     ? 'bg-primary-600/90 text-white shadow-lg shadow-primary-900/40'
                     : 'text-slate-300 hover:bg-white/5 hover:text-white'
@@ -152,6 +152,17 @@ export default function Layout() {
                 <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-out ${collapsed ? 'lg:w-0 lg:opacity-0' : 'w-auto opacity-100'}`}>
                   {item.label}
                 </span>
+
+                {/* Themed hover tooltip — only when sidebar is collapsed (desktop) */}
+                {collapsed && (
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute left-full top-1/2 ml-3 -translate-y-1/2 translate-x-1 z-50 hidden lg:flex items-center whitespace-nowrap rounded-md bg-primary-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg shadow-primary-900/40 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+                  >
+                    {item.label}
+                    <span className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-primary-600" />
+                  </span>
+                )}
               </Link>
             );
           })}

@@ -369,7 +369,7 @@ export default function UsersPage() {
                 onClick={handleInvite}
                 className="w-full bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out"
               >
-                Send Invite
+                Create User
               </button>
             </div>
           </div>

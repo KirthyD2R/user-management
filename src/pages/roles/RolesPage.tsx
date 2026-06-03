@@ -82,6 +82,11 @@ export default function RolesPage() {
   const [userRolesMap, setUserRolesMap] = useState<Record<string, { roleId: string; roleName: string }[]>>({});
   const [userRolesLoaded, setUserRolesLoaded] = useState(false);
 
+  // Ids of users who actually belong to the books app (have ≥1 books role).
+  // Used to scope the "User Lookup" dropdown to books users only.
+  const [booksUserIds, setBooksUserIds] = useState<Set<string>>(new Set());
+  const [booksUsersLoading, setBooksUsersLoading] = useState(false);
+
   // permission slug -> roles that grant it (lazy-built when Permissions tab opens).
   const [permRolesMap, setPermRolesMap] = useState<Record<string, { id: string; name: string }[]>>({});
   const [permIndexLoading, setPermIndexLoading] = useState(false);
@@ -325,6 +330,25 @@ export default function RolesPage() {
     setUserRolesLoaded(true);
     return map;
   };
+
+  // When the User Lookup tab opens, scope the dropdown to books users only:
+  // i.e. users that have at least one role in the books app.
+  useEffect(() => {
+    if (activeTab !== "lookup" || users.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      setBooksUsersLoading(true);
+      try {
+        const map = await ensureUserRolesMap();
+        if (cancelled) return;
+        setBooksUserIds(new Set(users.filter((u) => (map[u.id] || []).length > 0).map((u) => u.id)));
+      } finally {
+        if (!cancelled) setBooksUsersLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, users]);
 
   const handleRoleLookup = async () => {
     if (!lookupRoleId) {
@@ -628,8 +652,10 @@ export default function RolesPage() {
               <ThemedSelect
                 value={lookupUserId}
                 onChange={(v) => setLookupUserId(v)}
-                options={users.map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
-                placeholder="Select a user"
+                options={users
+                  .filter((u) => booksUserIds.has(u.id))
+                  .map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
+                placeholder={booksUsersLoading ? "Loading books users..." : "Select a user"}
               />
             </div>
 
