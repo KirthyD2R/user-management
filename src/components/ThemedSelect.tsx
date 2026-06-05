@@ -7,12 +7,12 @@ export default function ThemedSelect({
   value,
   onChange,
   options,
-  placeholder,
+  placeholder = "",
 }: {
   value: string;
   onChange: (v: string) => void;
   options: ThemedSelectOption[];
-  placeholder: string;
+  placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);

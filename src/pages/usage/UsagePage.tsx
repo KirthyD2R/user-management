@@ -23,7 +23,7 @@ export default function UsagePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [appSlug, setAppSlug] = useState('books');
+  const appSlug = 'books';
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [period, setPeriod] = useState(() => {
@@ -160,11 +160,6 @@ export default function UsagePage() {
       <div className="bg-white rounded-xl shadow-card border border-slate-200 p-4 mb-6">
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[160px]">
-            <label className="block text-sm font-medium text-slate-700 mb-1">App Slug</label>
-            <input type="text" value={appSlug} onChange={(e) => setAppSlug(e.target.value)}
-              className="field" placeholder="e.g. books" />
-          </div>
-          <div className="flex-1 min-w-[160px]">
             <label className="block text-sm font-medium text-slate-700 mb-1">Period</label>
             <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)}
               className="field" />
@@ -242,11 +237,6 @@ export default function UsagePage() {
                   placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">App Slug</label>
-                <input type="text" value={incrementForm.appSlug} onChange={(e) => setIncrementForm({ ...incrementForm, appSlug: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Usage Key</label>
                 <input type="text" value={incrementForm.usageKey} onChange={(e) => setIncrementForm({ ...incrementForm, usageKey: e.target.value })}
                   placeholder="e.g. invoices-created" required className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
@@ -275,11 +265,6 @@ export default function UsagePage() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Org ID</label>
                 <input type="text" value={checkIncrementForm.orgId} onChange={(e) => setCheckIncrementForm({ ...checkIncrementForm, orgId: e.target.value })}
                   placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">App Slug</label>
-                <input type="text" value={checkIncrementForm.appSlug} onChange={(e) => setCheckIncrementForm({ ...checkIncrementForm, appSlug: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Usage Key</label>
@@ -318,11 +303,6 @@ export default function UsagePage() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Org ID</label>
                 <input type="text" value={resetForm.orgId} onChange={(e) => setResetForm({ ...resetForm, orgId: e.target.value })}
                   placeholder={orgId || 'Organization ID'} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">App Slug</label>
-                <input type="text" value={resetForm.appSlug} onChange={(e) => setResetForm({ ...resetForm, appSlug: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Usage Key</label>

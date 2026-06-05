@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, User, Building2 } from 'lucide-react';
+import { Mail, Lock, User, Building2, Eye, EyeOff } from 'lucide-react';
 import { register } from '../../api/auth';
 import ThemedSelect from '../../components/ThemedSelect';
 
@@ -53,6 +53,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => {
@@ -82,7 +83,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50 to-secondary-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-4xl">
         <div className="bg-white rounded-2xl shadow-soft border border-slate-200 p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-accent-500">Dream Platform</h1>
@@ -109,8 +110,7 @@ export default function RegisterPage() {
             </div>
           ) : (
             <>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-1">
                       First name
@@ -126,7 +126,6 @@ export default function RegisterPage() {
                         value={formData.firstName}
                         onChange={(e) => handleChange('firstName', e.target.value)}
                         className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                        placeholder="John"
                       />
                     </div>
                   </div>
@@ -142,10 +141,8 @@ export default function RegisterPage() {
                       value={formData.lastName}
                       onChange={(e) => handleChange('lastName', e.target.value)}
                       className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="Doe"
                     />
                   </div>
-                </div>
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
@@ -162,7 +159,6 @@ export default function RegisterPage() {
                       value={formData.email}
                       onChange={(e) => handleChange('email', e.target.value)}
                       className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="you@example.com"
                     />
                   </div>
                 </div>
@@ -177,13 +173,20 @@ export default function RegisterPage() {
                     </div>
                     <input
                       id="password"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
                       value={formData.password}
                       onChange={(e) => handleChange('password', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="Create a password"
+                      className="block w-full pl-10 pr-10 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-primary-600 transition-colors duration-200"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                 </div>
 
@@ -202,42 +205,10 @@ export default function RegisterPage() {
                       value={formData.orgName}
                       onChange={(e) => handleChange('orgName', e.target.value)}
                       className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="My Organization"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label htmlFor="orgSlug" className="block text-sm font-medium text-slate-700 mb-1">
-                    Organization slug
-                  </label>
-                  <input
-                    id="orgSlug"
-                    type="text"
-                    required
-                    value={formData.orgSlug}
-                    onChange={(e) => handleChange('orgSlug', e.target.value)}
-                    className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-slate-50"
-                    placeholder="my-organization"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="appSlug" className="block text-sm font-medium text-slate-700 mb-1">
-                    App slug
-                  </label>
-                  <input
-                    id="appSlug"
-                    type="text"
-                    required
-                    value={formData.appSlug}
-                    onChange={(e) => handleChange('appSlug', e.target.value)}
-                    className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    placeholder="books"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="gstin" className="block text-sm font-medium text-slate-700 mb-1">
                       GSTIN
@@ -249,7 +220,6 @@ export default function RegisterPage() {
                       value={formData.gstin}
                       onChange={(e) => handleChange('gstin', e.target.value)}
                       className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="22AAAAA0000A1Z5"
                     />
                   </div>
 
@@ -264,10 +234,8 @@ export default function RegisterPage() {
                       value={formData.pan}
                       onChange={(e) => handleChange('pan', e.target.value)}
                       className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      placeholder="AAAAA0000A"
                     />
                   </div>
-                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -277,7 +245,6 @@ export default function RegisterPage() {
                     value={formData.currency}
                     onChange={(v) => handleChange('currency', v)}
                     options={CURRENCIES.map((o) => ({ value: o, label: o }))}
-                    placeholder="Select Currency"
                   />
                 </div>
 
@@ -289,7 +256,6 @@ export default function RegisterPage() {
                     value={formData.financialYearStart}
                     onChange={(v) => handleChange('financialYearStart', v)}
                     options={FINANCIAL_YEAR_START_MONTHS.map((o) => ({ value: o, label: o }))}
-                    placeholder="Select Financial Year Start"
                   />
                 </div>
 
@@ -301,14 +267,13 @@ export default function RegisterPage() {
                     value={formData.timezone}
                     onChange={(v) => handleChange('timezone', v)}
                     options={TIMEZONES.map((o) => ({ value: o, label: o }))}
-                    placeholder="Select Timezone"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="col-span-full w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                 >
                   {loading ? (
                     <svg
