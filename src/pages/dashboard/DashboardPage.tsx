@@ -172,14 +172,14 @@ export default function DashboardPage() {
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+        <h1 className="text-xl font-semibold text-accent-500 tracking-tight">
           Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
         </h1>
         <p className="text-slate-500 mt-1">Here's an overview of your platform.</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
         {cards.map((card) => (
           <Link
             to={card.path}
@@ -200,7 +200,7 @@ export default function DashboardPage() {
                   {card.icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">{card.count}</p>
+                  <p className="text-xl font-semibold text-accent-500 tracking-tight leading-none">{card.count}</p>
                   <p className="text-sm text-slate-500 mt-1.5 truncate">{card.label}</p>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-card p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+        <h2 className="text-base font-medium text-slate-700 mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-primary-500" />
           Quick Actions
         </h2>

@@ -205,7 +205,7 @@ export default function AppsPage() {
             <AppWindow className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{app?.name}</h1>
+            <h1 className="text-xl font-semibold text-accent-500">{app?.name}</h1>
             <p className="text-sm text-gray-500">Application details and configuration</p>
           </div>
         </div>
@@ -227,7 +227,7 @@ export default function AppsPage() {
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-gray-400" />
-            <h2 className="text-lg font-semibold text-gray-900">Users with access to Books</h2>
+            <h2 className="text-base font-medium text-slate-700">Users with access to Books</h2>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -313,7 +313,7 @@ export default function AppsPage() {
           <div className="fixed inset-0 bg-black/50" onClick={() => setEditModalOpen(false)} />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Edit App</h2>
+              <h2 className="text-base font-medium text-slate-700">Edit App</h2>
               <button onClick={() => setEditModalOpen(false)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X className="h-5 w-5" />
               </button>

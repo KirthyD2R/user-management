@@ -110,7 +110,7 @@ export default function PlansPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Plans & Limits</h1>
+          <h1 className="text-xl font-semibold text-accent-500">Plans & Limits</h1>
           <p className="text-sm text-slate-500 mt-1">Dream Books pricing plans</p>
         </div>
         {/* <button
@@ -190,10 +190,10 @@ export default function PlansPage() {
                 key={plan.slug}
                 className={`bg-white rounded-lg shadow-sm border p-4 flex flex-col ${highlightPlan(plan.slug)}`}
               >
-                <h3 className="text-base font-semibold text-slate-900 mb-1">{plan.name}</h3>
+                <h3 className="text-sm font-medium text-slate-700 mb-1">{plan.name}</h3>
 
                 <div className="mb-3">
-                  <span className="text-2xl font-bold text-slate-900">{formatPrice(perMonth)}</span>
+                  <span className="text-xl font-semibold text-accent-500">{formatPrice(perMonth)}</span>
                   {price > 0 && <span className="text-xs text-slate-500 ml-1">/month</span>}
                   {billingCycle === 'yearly' && price > 0 && (
                     <p className="text-xs text-slate-400 mt-1">
@@ -224,7 +224,7 @@ export default function PlansPage() {
       {showComparison && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Feature Comparison</h2>
+            <h2 className="text-base font-medium text-slate-700">Feature Comparison</h2>
             <button onClick={() => setShowComparison(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition-all duration-200 ease-out">
               <X className="h-5 w-5" />
             </button>
@@ -273,7 +273,7 @@ export default function PlansPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Limits - {limitsTarget.name}</h2>
+              <h2 className="text-base font-medium text-slate-700">Limits - {limitsTarget.name}</h2>
               <button onClick={() => { setShowLimitsModal(false); setLimitsTarget(null); setLimits([]); }}
                 className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition-all duration-200 ease-out">
                 <X className="h-5 w-5" />

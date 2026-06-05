@@ -11,7 +11,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-slate-50 text-slate-600;
     font-feature-settings: 'cv11', 'ss01', 'ss03';
   }
   /* Smoother focus ring across the app */
@@ -61,6 +61,13 @@
   .card {
     @apply bg-white rounded-xl border border-slate-200 shadow-card;
   }
+  /* Soft sky-blue page title (reference style) — light weight, not heavy */
+  .page-title {
+    @apply text-xl font-semibold text-accent-500 tracking-tight;
+  }
+  .section-title {
+    @apply text-base font-medium text-slate-700;
+  }
   /* Status badges (semantic, not theme) */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
@@ -79,3 +86,17 @@
   to { transform: translateX(0); opacity: 1; }
 }
 .animate-slide-in { animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Dropdown animation — fade + slight scale, no horizontal travel (avoids transient scrollbar) */
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-dropdown { animation: dropdown-in 0.18s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top right; }
+
+/* Plain fade — for overlays/backdrops */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in { animation: fade-in 0.2s ease-out; }

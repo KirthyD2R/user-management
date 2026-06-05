@@ -10,19 +10,19 @@ export default {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        // Brand: deep blue primary scale
+        // Brand: sky-blue primary scale (matches the reference theme)
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          50: '#eef7fd',
+          100: '#d7ecfa',
+          200: '#b4dcf4',
+          300: '#85c5ec',
+          400: '#5cb3e8',
+          500: '#2f8fd6',
+          600: '#1f6fb2',
+          700: '#1c5e98',
+          800: '#1b4f7e',
+          900: '#1a4368',
+          950: '#143049',
         },
         // Secondary: lighter sky blue accent
         secondary: {
@@ -37,6 +37,24 @@ export default {
           800: '#075985',
           900: '#0c4a6e',
         },
+        // Accent: the reference sky-blue used for headings & chrome
+        accent: {
+          50: '#eef7fd',
+          100: '#d7ecfa',
+          200: '#b4dcf4',
+          300: '#85c5ec',
+          400: '#5cb3e8',
+          500: '#2f8fd6',
+          600: '#1f6fb2',
+          700: '#1c5e98',
+          800: '#1b4f7e',
+          900: '#1a4368',
+        },
+      },
+      backgroundImage: {
+        // Reference chrome: blue top bar + left rail
+        'brand-header': 'linear-gradient(90deg, #1f6fb2 0%, #2f8fd6 55%, #4cb0e6 100%)',
+        'brand-rail': 'linear-gradient(180deg, #1f6fb2 0%, #1c5e98 100%)',
       },
       boxShadow: {
         'soft': '0 2px 8px -2px rgb(15 23 42 / 0.06), 0 4px 16px -4px rgb(15 23 42 / 0.04)',

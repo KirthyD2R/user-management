@@ -461,7 +461,7 @@ export default function RolesPage() {
     <div className="min-h-screen bg-slate-50 p-6 lg:p-10">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+        <h1 className="text-xl font-semibold text-accent-500 flex items-center gap-2">
           <Shield className="w-7 h-7 text-primary-600" />
           Roles &amp; Permissions
         </h1>
@@ -575,7 +575,7 @@ export default function RolesPage() {
       {/* ===== ASSIGN ROLE TAB ===== */}
       {activeTab === "assign" && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-lg">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <h2 className="text-base font-medium text-slate-700 mb-4 flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-primary-600" />
             Assign Role
           </h2>
@@ -641,7 +641,7 @@ export default function RolesPage() {
       {/* ===== USER LOOKUP TAB ===== */}
       {activeTab === "lookup" && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-lg">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <h2 className="text-base font-medium text-slate-700 mb-4 flex items-center gap-2">
             <Users className="w-5 h-5 text-primary-600" />
             User Role Lookup
           </h2>
@@ -724,7 +724,7 @@ export default function RolesPage() {
       {/* ===== USERS BY ROLE TAB ===== */}
       {activeTab === "rolelookup" && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-lg">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <h2 className="text-base font-medium text-slate-700 mb-4 flex items-center gap-2">
             <Users className="w-5 h-5 text-primary-600" />
             Users by Role
           </h2>
@@ -912,7 +912,7 @@ export default function RolesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">Remove Role</h3>
+              <h3 className="text-base font-medium text-slate-700">Remove Role</h3>
             </div>
             <div className="px-6 py-4">
               <p className="text-sm text-slate-600">
@@ -951,7 +951,7 @@ export default function RolesPage() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col mx-4">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-base font-medium text-slate-700">
                   Users with permission
                 </h3>
                 <p className="text-xs text-slate-400 font-mono mt-0.5">
@@ -1003,7 +1003,7 @@ export default function RolesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col mx-4">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">
+              <h3 className="text-base font-medium text-slate-700">
                 {modalRole?.name} — Permissions
               </h3>
               <button

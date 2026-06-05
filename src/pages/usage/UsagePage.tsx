@@ -234,7 +234,7 @@ export default function UsagePage() {
       {showIncrementModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold mb-4">Increment Usage</h2>
+            <h2 className="text-base font-medium mb-4">Increment Usage</h2>
             <form onSubmit={handleIncrement} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Org ID</label>
@@ -269,7 +269,7 @@ export default function UsagePage() {
       {showCheckIncrementModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold mb-4">Check & Increment</h2>
+            <h2 className="text-base font-medium mb-4">Check & Increment</h2>
             <form onSubmit={handleCheckAndIncrement} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Org ID</label>
@@ -311,7 +311,7 @@ export default function UsagePage() {
       {showResetModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold mb-4 text-red-600">Reset Usage</h2>
+            <h2 className="text-base font-medium mb-4 text-red-600">Reset Usage</h2>
             <p className="text-sm text-slate-600 mb-4">This will reset the usage counter to zero. This action cannot be undone.</p>
             <form onSubmit={handleReset} className="space-y-4">
               <div>

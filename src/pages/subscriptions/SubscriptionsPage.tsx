@@ -185,7 +185,7 @@ export default function SubscriptionsPage() {
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Subscriptions</h1>
+        <h1 className="text-xl font-semibold text-accent-500">Subscriptions</h1>
         <button
           onClick={() => setShowCreateModal(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition"
@@ -311,7 +311,7 @@ export default function SubscriptionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Create Subscription</h2>
+              <h2 className="text-base font-medium text-slate-700">Create Subscription</h2>
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition"
@@ -382,7 +382,7 @@ export default function SubscriptionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Change Plan</h2>
+              <h2 className="text-base font-medium text-slate-700">Change Plan</h2>
               <button
                 onClick={() => { setShowPlanModal(false); setPlanTarget(null); }}
                 className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition"
@@ -430,7 +430,7 @@ export default function SubscriptionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Change Status</h2>
+              <h2 className="text-base font-medium text-slate-700">Change Status</h2>
               <button
                 onClick={() => { setShowStatusModal(false); setStatusTarget(null); }}
                 className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition"

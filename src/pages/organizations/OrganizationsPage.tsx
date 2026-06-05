@@ -260,7 +260,7 @@ const OrganizationsPage: React.FC = () => {
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Organizations</h1>
+        <h1 className="text-xl font-semibold text-accent-500">Organizations</h1>
         <button
           onClick={() => {
             setFormData({ ...emptyForm });
@@ -378,9 +378,9 @@ const OrganizationsPage: React.FC = () => {
       {/* Create Organization Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">Create Organization</h2>
+              <h2 className="text-base font-medium text-slate-700">Create Organization</h2>
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="p-1 text-slate-400 hover:text-slate-600 rounded"
@@ -388,18 +388,8 @@ const OrganizationsPage: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {renderField("Name", "name")}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
-                <input
-                  type="text"
-                  value={formData.slug || ''}
-                  readOnly
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
-                  placeholder="Auto-generated from name"
-                />
-              </div>
               {renderField("Email", "email")}
               {renderField("Phone", "phone")}
               {renderField("Industry", "industry")}
@@ -437,9 +427,9 @@ const OrganizationsPage: React.FC = () => {
       {/* Edit Organization Modal */}
       {showEditModal && selectedOrg && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">Edit Organization</h2>
+              <h2 className="text-base font-medium text-slate-700">Edit Organization</h2>
               <button
                 onClick={() => {
                   setShowEditModal(false);
@@ -450,18 +440,8 @@ const OrganizationsPage: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {renderField("Name", "name")}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
-                <input
-                  type="text"
-                  value={formData.slug || ''}
-                  readOnly
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
-                  placeholder="Auto-generated from name"
-                />
-              </div>
               {renderField("Email", "email")}
               {renderField("Phone", "phone")}
               {renderField("Industry", "industry")}
@@ -504,7 +484,7 @@ const OrganizationsPage: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">
+              <h2 className="text-base font-medium text-slate-700">
                 Stats - {selectedOrg.name}
               </h2>
               <button
