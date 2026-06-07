@@ -99,7 +99,7 @@ export default function RegisterPage() {
           {success ? (
             <div className="text-center">
               <div className="mb-4 p-3 rounded bg-green-50 text-green-700 text-sm">
-                Account created successfully! Please check your email to verify your account.
+                Account created successfully!
               </div>
               <Link
                 to="/login"

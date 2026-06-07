@@ -1,4 +1,17 @@
 import axios from "axios";
+import { toast } from "../components/Toast";
+import { getErrorMessage } from "./helpers";
+
+// Auth endpoints handle their own 401s (bad credentials, expired reset token,
+// etc.) — they must NOT trigger the session-refresh/redirect flow.
+const isAuthEndpoint = (url?: string) =>
+  /\/api\/auth\/(login|register|forgot-password|reset-password|refresh)/.test(url || "");
+
+const clearAuthStorage = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+};
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "https://dream-platform-api.vercel.app",
@@ -27,9 +40,11 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config || {};
+    const status = error.response?.status;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Session-expiry handling: only for authenticated (non-auth) endpoints.
+    if (status === 401 && !originalRequest._retry && !isAuthEndpoint(originalRequest.url)) {
       originalRequest._retry = true;
 
       const refreshToken = localStorage.getItem("refreshToken");
@@ -53,22 +68,23 @@ client.interceptors.response.use(
           localStorage.setItem("refreshToken", newRefreshToken);
 
           originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
-          return client(originalRequest);
+          return client(originalRequest); // retry; success surfaces no error
         } catch {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("user");
+          clearAuthStorage();
+          toast("Your session has expired. Please sign in again.", "error");
           window.location.href = "/login";
           return Promise.reject(error);
         }
       } else {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
+        clearAuthStorage();
+        toast("Your session has expired. Please sign in again.", "error");
         window.location.href = "/login";
+        return Promise.reject(error);
       }
     }
 
+    // Surface every other failure as a popup with the server's message.
+    toast(getErrorMessage(error), "error");
     return Promise.reject(error);
   }
 );

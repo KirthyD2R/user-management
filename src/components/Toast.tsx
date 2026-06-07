@@ -15,13 +15,37 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 let toastId = 0;
 
+/**
+ * Module-level bridge so non-React code (e.g. the Axios interceptor in
+ * api/client.ts) can surface toasts without access to React context.
+ * The ToastProvider registers its showToast here on mount.
+ */
+type ShowToast = (message: string, type: 'success' | 'error') => void;
+let externalShowToast: ShowToast | null = null;
+export function toast(message: string, type: 'success' | 'error' = 'error') {
+  externalShowToast?.(message, type);
+}
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
-    const id = ++toastId;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    if (!message) return;
+    setToasts((prev) => {
+      // De-dupe: don't stack an identical message that's already visible
+      if (prev.some((t) => t.message === message && t.type === type)) return prev;
+      const id = ++toastId;
+      return [...prev, { id, message, type }];
+    });
   }, []);
+
+  // Expose showToast to the module-level bridge for non-React callers
+  useEffect(() => {
+    externalShowToast = showToast;
+    return () => {
+      if (externalShowToast === showToast) externalShowToast = null;
+    };
+  }, [showToast]);
 
   const removeToast = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
