@@ -202,7 +202,7 @@ export default function UsersPage() {
           className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out"
         >
           <Plus className="w-4 h-4" />
-          Create User
+          Add User
         </button>
       </div>
 
@@ -369,7 +369,7 @@ export default function UsersPage() {
                 onClick={handleInvite}
                 className="w-full bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out"
               >
-                Create User
+                Add User
               </button>
             </div>
           </div>

@@ -2,7 +2,8 @@ import client from "./client";
 import { ApiResponse, User, App } from "../types";
 
 export const createUser = async (data: Partial<User> & { password?: string }): Promise<ApiResponse<User>> => {
-  const response = await client.post("/api/users", data);
+  const payload = data.email ? { ...data, email: data.email.toLowerCase() } : data;
+  const response = await client.post("/api/users", payload);
   return response.data;
 };
 
@@ -57,6 +58,6 @@ export const inviteUser = async (data: {
   appSlug: string;
   roleSlug: string;
 }): Promise<ApiResponse<User>> => {
-  const response = await client.post("/api/users/invite", data);
+  const response = await client.post("/api/users/invite", { ...data, email: data.email.toLowerCase() });
   return response.data;
 };
