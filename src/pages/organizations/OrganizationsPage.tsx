@@ -22,6 +22,7 @@ import { checkAccess } from "../../api/subscriptions";
 import { extractArray, extractData } from "../../api/helpers";
 import { Organization } from "../../types";
 import { toast } from "../../components/Toast";
+import { validateEmail, validatePhone } from "../../utils/validators";
 
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
 const TIMEZONES = [
@@ -98,6 +99,7 @@ const OrganizationsPage: React.FC = () => {
   const [createdOrgName, setCreatedOrgName] = useState("");
 
   const [formData, setFormData] = useState<Partial<Organization>>({ ...emptyForm });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [saving, setSaving] = useState(false);
@@ -189,6 +191,7 @@ const OrganizationsPage: React.FC = () => {
       setShowCreateModal(false);
       setCreatedOrgName(formData.name || "");
       setFormData({ ...emptyForm });
+      setFieldErrors({});
       setShowNextStepModal(true);
       await fetchOrgs();
     } catch (err: unknown) {
@@ -235,6 +238,13 @@ const OrganizationsPage: React.FC = () => {
     }
   };
 
+  const validateField = (name: string, value: string) => {
+    let err = "";
+    if (name === "email") err = validateEmail(value);
+    if (name === "phone") err = validatePhone(value);
+    setFieldErrors((prev) => ({ ...prev, [name]: err }));
+  };
+
   const renderField = (
     label: string,
     name: string,
@@ -262,9 +272,13 @@ const OrganizationsPage: React.FC = () => {
           name={name}
           value={(formData as Record<string, string>)[name] || ""}
           onChange={handleFormChange}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          onBlur={(e) => validateField(name, e.target.value)}
+          className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${fieldErrors[name] ? "border-red-400" : "border-slate-300"}`}
           placeholder={label}
         />
+      )}
+      {fieldErrors[name] && (
+        <p className="mt-1 text-xs text-red-500">{fieldErrors[name]}</p>
       )}
     </div>
   );

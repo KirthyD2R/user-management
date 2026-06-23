@@ -5,6 +5,7 @@ import { listOrgUsers, inviteUser, updateUser, toggleUserStatus, getUserApps, de
 import { getUserRolesForApp, listRoles } from '../../api/roles';
 import { getOrganization } from '../../api/organizations';
 import { extractArray, extractData, normalizeUser } from '../../api/helpers';
+import { validateEmail, validatePhone } from '../../utils/validators';
 import { User, App } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
 import Pagination from '../../components/Pagination';
@@ -35,6 +36,8 @@ export default function UsersPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '' });
+  const [inviteEmailError, setInviteEmailError] = useState('');
+  const [editPhoneError, setEditPhoneError] = useState('');
 
   const [showAppsModal, setShowAppsModal] = useState(false);
   const [userApps, setUserApps] = useState<App[]>([]);
@@ -315,8 +318,10 @@ export default function UsersPage() {
                   type="email"
                   value={inviteForm.email}
                   onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onBlur={(e) => setInviteEmailError(validateEmail(e.target.value))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${inviteEmailError ? "border-red-400" : "border-slate-300"}`}
                 />
+                {inviteEmailError && <p className="mt-1 text-xs text-red-500">{inviteEmailError}</p>}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -365,7 +370,7 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={handleInvite}
-                disabled={!inviteForm.email.trim() || !inviteForm.firstName.trim() || !(inviteForm.orgId || orgId) || !inviteForm.roleSlug}
+                disabled={!inviteForm.email.trim() || !inviteForm.firstName.trim() || !(inviteForm.orgId || orgId) || !inviteForm.roleSlug || !!inviteEmailError}
                 className="w-full py-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 bg-primary-600 text-white hover:bg-primary-700"
               >
                 Add User
@@ -410,8 +415,10 @@ export default function UsersPage() {
                   type="text"
                   value={editForm.phone}
                   onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onBlur={(e) => setEditPhoneError(validatePhone(e.target.value))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${editPhoneError ? "border-red-400" : "border-slate-300"}`}
                 />
+                {editPhoneError && <p className="mt-1 text-xs text-red-500">{editPhoneError}</p>}
               </div>
               <button
                 onClick={handleUpdate}

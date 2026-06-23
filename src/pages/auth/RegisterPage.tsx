@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react';
+import { validateEmail } from '../../utils/validators';
 import { Link } from 'react-router-dom';
 import { Mail, Lock, User, Building2, Eye, EyeOff } from 'lucide-react';
 import { register } from '../../api/auth';
@@ -44,6 +45,7 @@ export default function RegisterPage() {
     timezone: 'Asia/Kolkata',
   });
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -166,9 +168,11 @@ export default function RegisterPage() {
                       required
                       value={formData.email}
                       onChange={(e) => handleChange('email', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      onBlur={(e) => setEmailError(validateEmail(e.target.value))}
+                      className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${emailError ? "border-red-400" : "border-slate-300"}`}
                     />
                   </div>
+                  {emailError && <p className="mt-1 text-xs text-red-500">{emailError}</p>}
                 </div>
 
                 <div>

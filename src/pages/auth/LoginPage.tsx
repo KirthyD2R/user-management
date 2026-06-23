@@ -2,11 +2,13 @@ import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Shield, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { validateEmail } from '../../utils/validators';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
@@ -59,10 +61,12 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="field pl-10"
+                  onBlur={(e) => setEmailError(validateEmail(e.target.value))}
+                  className={`field pl-10 ${emailError ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""}`}
                   placeholder="you@example.com"
                 />
               </div>
+              {emailError && <p className="mt-1 text-xs text-red-500">{emailError}</p>}
             </div>
 
             <div>
