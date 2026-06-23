@@ -6,12 +6,11 @@ import {
   getOrgSubscriptions,
   changePlan,
   changeStatus,
-  checkAccess,
 } from '../../api/subscriptions';
 import { listOrganizations } from '../../api/organizations';
 import { listApps } from '../../api/apps';
 import { listPlans } from '../../api/plans';
-import { extractArray, extractData } from '../../api/helpers';
+import { extractArray } from '../../api/helpers';
 import { Organization, App, Plan } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
 import Pagination from '../../components/Pagination';
@@ -73,20 +72,7 @@ export default function SubscriptionsPage() {
         listPlans('books'),
       ]);
       const allOrgs = extractArray<Organization>(orgsRes);
-
-      // Filter orgs to only those with books app access
-      const accessChecks = await Promise.all(
-        allOrgs.map(async (org) => {
-          try {
-            const accessRes = await checkAccess(org.id, 'books');
-            const data = extractData<{ hasAccess: boolean }>(accessRes);
-            return data?.hasAccess === true;
-          } catch {
-            return false;
-          }
-        })
-      );
-      setOrgOptions(allOrgs.filter((_, i) => accessChecks[i]));
+      setOrgOptions(allOrgs);
 
       const allApps = extractArray<App>(appsRes);
       setAppOptions(allApps.filter((a) => a.slug === 'books'));

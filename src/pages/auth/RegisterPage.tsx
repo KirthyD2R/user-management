@@ -10,29 +10,13 @@ const TIMEZONES = [
   'America/Chicago',
   'America/Denver',
   'America/Los_Angeles',
-  'Europe/London',
-  'Europe/Paris',
-  'Europe/Berlin',
-  'Asia/Tokyo',
-  'Asia/Shanghai',
-  'Asia/Dubai',
-  'Australia/Sydney',
-  'Pacific/Auckland',
+  "America/Phoenix"
 ];
-const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP'];
+const CURRENCIES = ['INR', 'USD'];
 const FINANCIAL_YEAR_START_MONTHS = [
   'January',
-  'February',
   'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  'April'
 ];
 
 function slugify(text: string): string {

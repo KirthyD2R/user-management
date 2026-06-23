@@ -14,9 +14,9 @@ import {
   updateOrganization,
   updateOrgStatus,
 } from "../../api/organizations";
-import { checkAccess } from "../../api/subscriptions";
-import { extractArray, extractData } from "../../api/helpers";
+import { extractArray } from "../../api/helpers";
 import { Organization } from "../../types";
+import { toast } from "../../components/Toast";
 
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
 const TIMEZONES = [
@@ -25,29 +25,13 @@ const TIMEZONES = [
   "America/Chicago",
   "America/Denver",
   "America/Los_Angeles",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Asia/Tokyo",
-  "Asia/Shanghai",
-  "Asia/Dubai",
-  "Australia/Sydney",
-  "Pacific/Auckland",
+  "America/Phoenix"
 ];
-const CURRENCIES = ["INR", "USD", "EUR", "GBP"];
+const CURRENCIES = ["INR", "USD"];
 const FINANCIAL_YEAR_START_MONTHS = [
   "January",
-  "February",
   "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "April"
 ];
 
 const emptyForm: Partial<Organization> = {
@@ -109,7 +93,16 @@ const OrganizationsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   const LIMIT = 20;
-  const APP_SLUG = "books";
+
+  const mandatoryFilled = Boolean(
+    formData.name?.trim() &&
+    formData.email?.trim() &&
+    formData.gstin?.trim() &&
+    formData.pan?.trim() &&
+    formData.currency &&
+    formData.financialYearStart &&
+    formData.timezone
+  );
 
   // Client-side partial search (case-insensitive) across the main org fields.
   const query = searchQuery.trim().toLowerCase();
@@ -126,28 +119,8 @@ const OrganizationsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch all organizations
       const res = await listOrganizations(1, 1000);
-      const allOrgs = extractArray<Organization>(res);
-
-      // Check which orgs have a books app subscription
-      const accessResults = await Promise.all(
-        allOrgs.map(async (org) => {
-          try {
-            const accessRes = await checkAccess(org.id, APP_SLUG);
-            const data = extractData<{ hasAccess: boolean }>(accessRes);
-            return { org, hasAccess: data?.hasAccess === true };
-          } catch {
-            return { org, hasAccess: false };
-          }
-        })
-      );
-
-      const filtered = accessResults
-        .filter((r) => r.hasAccess)
-        .map((r) => r.org);
-
-      setAllFilteredOrgs(filtered);
+      setAllFilteredOrgs(extractArray<Organization>(res));
       setPage(1);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to fetch organizations";
@@ -197,10 +170,11 @@ const OrganizationsPage: React.FC = () => {
       }
       setShowCreateModal(false);
       setFormData({ ...emptyForm });
+      toast("Organization created successfully", "success");
       await fetchOrgs();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to create organization";
-      setError(message);
+      toast(message, "error");
     } finally {
       setSaving(false);
     }
@@ -215,10 +189,11 @@ const OrganizationsPage: React.FC = () => {
       setShowEditModal(false);
       setSelectedOrg(null);
       setFormData({ ...emptyForm });
+      toast("Organization updated successfully", "success");
       await fetchOrgs();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to update organization";
-      setError(message);
+      toast(message, "error");
     } finally {
       setSaving(false);
     }
@@ -245,10 +220,14 @@ const OrganizationsPage: React.FC = () => {
     label: string,
     name: string,
     type: "text" | "select" = "text",
-    options?: string[]
+    options?: string[],
+    required?: boolean
   ) => (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-1">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
       {type === "select" ? (
         <ThemedSelect
           value={(formData as Record<string, string>)[name] || ""}
@@ -295,7 +274,7 @@ const OrganizationsPage: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by name, email, city, country..."
+            placeholder="Search by name, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -404,14 +383,9 @@ const OrganizationsPage: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            {error && (
-              <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {renderField("Name", "name")}
-              {renderField("Email", "email")}
+              {renderField("Name", "name", "text", undefined, true)}
+              {renderField("Email", "email", "text", undefined, true)}
               {renderField("Phone", "phone")}
               {renderField("Industry", "industry")}
               {renderField("Company Size", "companySize", "select", COMPANY_SIZES)}
@@ -420,11 +394,11 @@ const OrganizationsPage: React.FC = () => {
               {renderField("State", "state")}
               {renderField("Country", "country")}
               {renderField("Postal Code", "postalCode")}
-              {renderField("GSTIN", "gstin")}
-              {renderField("PAN", "pan")}
-              {renderField("Currency", "currency", "select", CURRENCIES)}
-              {renderField("Financial Year Start", "financialYearStart", "select", FINANCIAL_YEAR_START_MONTHS)}
-              {renderField("Timezone", "timezone", "select", TIMEZONES)}
+              {renderField("GSTIN", "gstin", "text", undefined, true)}
+              {renderField("PAN", "pan", "text", undefined, true)}
+              {renderField("Currency", "currency", "select", CURRENCIES, true)}
+              {renderField("Financial Year Start", "financialYearStart", "select", FINANCIAL_YEAR_START_MONTHS, true)}
+              {renderField("Timezone", "timezone", "select", TIMEZONES, true)}
             </div>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
               <button
@@ -435,8 +409,8 @@ const OrganizationsPage: React.FC = () => {
               </button>
               <button
                 onClick={handleCreate}
-                disabled={saving}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                disabled={saving || !mandatoryFilled}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 bg-primary-600 hover:bg-primary-700"
               >
                 {saving ? "Saving..." : "Save"}
               </button>
@@ -462,8 +436,8 @@ const OrganizationsPage: React.FC = () => {
               </button>
             </div>
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {renderField("Name", "name")}
-              {renderField("Email", "email")}
+              {renderField("Name", "name", "text", undefined, true)}
+              {renderField("Email", "email", "text", undefined, true)}
               {renderField("Phone", "phone")}
               {renderField("Industry", "industry")}
               {renderField("Company Size", "companySize", "select", COMPANY_SIZES)}
@@ -472,11 +446,11 @@ const OrganizationsPage: React.FC = () => {
               {renderField("State", "state")}
               {renderField("Country", "country")}
               {renderField("Postal Code", "postalCode")}
-              {renderField("GSTIN", "gstin")}
-              {renderField("PAN", "pan")}
-              {renderField("Currency", "currency", "select", CURRENCIES)}
-              {renderField("Financial Year Start", "financialYearStart", "select", FINANCIAL_YEAR_START_MONTHS)}
-              {renderField("Timezone", "timezone", "select", TIMEZONES)}
+              {renderField("GSTIN", "gstin", "text", undefined, true)}
+              {renderField("PAN", "pan", "text", undefined, true)}
+              {renderField("Currency", "currency", "select", CURRENCIES, true)}
+              {renderField("Financial Year Start", "financialYearStart", "select", FINANCIAL_YEAR_START_MONTHS, true)}
+              {renderField("Timezone", "timezone", "select", TIMEZONES, true)}
             </div>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
               <button
@@ -490,8 +464,8 @@ const OrganizationsPage: React.FC = () => {
               </button>
               <button
                 onClick={handleEdit}
-                disabled={saving}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                disabled={saving || !mandatoryFilled}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 bg-primary-600 hover:bg-primary-700"
               >
                 {saving ? "Saving..." : "Save"}
               </button>
