@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   Pencil,
   Power,
-  Plus,
   X,
   Search,
-  ArrowRight,
-  CheckCircle2,
 } from "lucide-react";
 import ThemedSelect from "../../components/ThemedSelect";
 import Pagination from "../../components/Pagination";
 import {
   listOrganizations,
-  createOrganization,
   updateOrganization,
   updateOrgStatus,
 } from "../../api/organizations";
@@ -83,7 +78,6 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const OrganizationsPage: React.FC = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const orgId = user?.orgId || "";
   const [allFilteredOrgs, setAllFilteredOrgs] = useState<Organization[]>([]);
@@ -92,11 +86,8 @@ const OrganizationsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
-  const [showNextStepModal, setShowNextStepModal] = useState(false);
-  const [createdOrgName, setCreatedOrgName] = useState("");
 
   const [formData, setFormData] = useState<Partial<Organization>>({ ...emptyForm });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -166,40 +157,6 @@ const OrganizationsPage: React.FC = () => {
       [name]: value,
       ...(name === "name" && !showEditModal ? { slug: slugify(value) } : {}),
     }));
-  };
-
-  const handleCreate = async () => {
-    setSaving(true);
-    setError(null);
-    const baseSlug = slugify(formData.name || "");
-    try {
-      let attempt = 0;
-      while (true) {
-        const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt}`;
-        try {
-          await createOrganization({ ...formData, slug });
-          break;
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "";
-          if (msg.toLowerCase().includes("slug") && attempt < 10) {
-            attempt++;
-          } else {
-            throw err;
-          }
-        }
-      }
-      setShowCreateModal(false);
-      setCreatedOrgName(formData.name || "");
-      setFormData({ ...emptyForm });
-      setFieldErrors({});
-      setShowNextStepModal(true);
-      await fetchOrgs();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create organization";
-      toast(message, "error");
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleEdit = async () => {
@@ -288,17 +245,6 @@ const OrganizationsPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-accent-500">Organizations</h1>
-        <button
-          onClick={() => {
-            setFormData({ ...emptyForm });
-            setError(null);
-            setShowCreateModal(true);
-          }}
-          className="inline-flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-all duration-200 ease-out"
-        >
-          <Plus className="w-4 h-4" />
-          Create Organization
-        </button>
       </div>
 
       {/* Search */}
@@ -402,55 +348,6 @@ const OrganizationsPage: React.FC = () => {
           onPageChange={setPage}
         />
       </div>
-
-      {/* Create Organization Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h2 className="text-base font-medium text-slate-700">Create Organization</h2>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {renderField("Name", "name", "text", undefined, true)}
-              {renderField("Email", "email", "text", undefined, true)}
-              {renderField("Phone", "phone")}
-              {renderField("Industry", "industry")}
-              {renderField("Company Size", "companySize", "select", COMPANY_SIZES)}
-              {renderField("Address", "address")}
-              {renderField("City", "city")}
-              {renderField("State", "state")}
-              {renderField("Country", "country")}
-              {renderField("Postal Code", "postalCode")}
-              {renderField("GSTIN", "gstin", "text", undefined, true)}
-              {renderField("PAN", "pan", "text", undefined, true)}
-              {renderField("Currency", "currency", "select", CURRENCIES, true)}
-              {renderField("Financial Year Start", "financialYearStart", "select", FINANCIAL_YEAR_START_MONTHS, true)}
-              {renderField("Timezone", "timezone", "select", TIMEZONES, true)}
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
-              <button
-                onClick={() => { setShowCreateModal(false); setError(null); }}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreate}
-                disabled={saving || !mandatoryFilled}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 bg-primary-600 hover:bg-primary-700"
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Edit Organization Modal */}
       {showEditModal && selectedOrg && (
@@ -565,38 +462,6 @@ const OrganizationsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Next Step Modal — shown after org creation */}
-      {showNextStepModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col items-center text-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-800">Organization Created</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                <span className="font-medium text-slate-700">{createdOrgName}</span> was created successfully.
-                To activate it, assign a Books subscription.
-              </p>
-            </div>
-            <div className="flex gap-3 w-full mt-2">
-              <button
-                onClick={() => setShowNextStepModal(false)}
-                className="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
-              >
-                Later
-              </button>
-              <button
-                onClick={() => { setShowNextStepModal(false); navigate("/subscriptions"); }}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700"
-              >
-                Create Subscription
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
