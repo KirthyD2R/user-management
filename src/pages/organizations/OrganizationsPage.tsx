@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   Pencil,
   Power,
   Plus,
   X,
   Search,
+  ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 import ThemedSelect from "../../components/ThemedSelect";
 import Pagination from "../../components/Pagination";
@@ -14,7 +18,8 @@ import {
   updateOrganization,
   updateOrgStatus,
 } from "../../api/organizations";
-import { extractArray } from "../../api/helpers";
+import { checkAccess } from "../../api/subscriptions";
+import { extractArray, extractData } from "../../api/helpers";
 import { Organization } from "../../types";
 import { toast } from "../../components/Toast";
 
@@ -77,6 +82,9 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const OrganizationsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const orgId = user?.orgId || "";
   const [allFilteredOrgs, setAllFilteredOrgs] = useState<Organization[]>([]);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,6 +94,8 @@ const OrganizationsPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showNextStepModal, setShowNextStepModal] = useState(false);
+  const [createdOrgName, setCreatedOrgName] = useState("");
 
   const [formData, setFormData] = useState<Partial<Organization>>({ ...emptyForm });
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
@@ -116,11 +126,19 @@ const OrganizationsPage: React.FC = () => {
   const orgs = filteredOrgs.slice((page - 1) * LIMIT, page * LIMIT);
 
   const fetchOrgs = async () => {
+    if (!orgId) return;
     setLoading(true);
     setError(null);
     try {
       const res = await listOrganizations(1, 1000);
-      setAllFilteredOrgs(extractArray<Organization>(res));
+      const allOrgs = extractArray<Organization>(res);
+      const myOrg = allOrgs.filter((o) => o.id === orgId);
+      const hasAccess = myOrg.length > 0
+        ? await checkAccess(orgId, "books")
+            .then((r) => extractData<{ hasAccess: boolean }>(r)?.hasAccess === true)
+            .catch(() => false)
+        : false;
+      setAllFilteredOrgs(hasAccess ? myOrg : []);
       setPage(1);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to fetch organizations";
@@ -169,8 +187,9 @@ const OrganizationsPage: React.FC = () => {
         }
       }
       setShowCreateModal(false);
+      setCreatedOrgName(formData.name || "");
       setFormData({ ...emptyForm });
-      toast("Organization created successfully", "success");
+      setShowNextStepModal(true);
       await fetchOrgs();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to create organization";
@@ -526,6 +545,39 @@ const OrganizationsPage: React.FC = () => {
                 className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Next Step Modal — shown after org creation */}
+      {showNextStepModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col items-center text-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-slate-800">Organization Created</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                <span className="font-medium text-slate-700">{createdOrgName}</span> was created successfully.
+                To activate it, assign a Books subscription.
+              </p>
+            </div>
+            <div className="flex gap-3 w-full mt-2">
+              <button
+                onClick={() => setShowNextStepModal(false)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
+              >
+                Later
+              </button>
+              <button
+                onClick={() => { setShowNextStepModal(false); navigate("/subscriptions"); }}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+              >
+                Create Subscription
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>

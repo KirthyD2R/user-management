@@ -3,8 +3,7 @@ import { Pencil, Power, AppWindow, Search, X, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { listOrgUsers, inviteUser, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
 import { getUserRolesForApp, listRoles } from '../../api/roles';
-import { listOrganizations } from '../../api/organizations';
-import { checkAccess } from '../../api/subscriptions';
+import { getOrganization } from '../../api/organizations';
 import { extractArray, extractData, normalizeUser } from '../../api/helpers';
 import { User, App } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
@@ -45,30 +44,20 @@ export default function UsersPage() {
   const [roles, setRoles] = useState<{ slug: string; name: string }[]>([]);
 
   useEffect(() => {
+    if (!orgId) return;
     const fetchDropdownData = async () => {
       try {
-        const [orgsRes, rolesRes] = await Promise.all([
-          listOrganizations(),
+        const [orgRes, rolesRes] = await Promise.all([
+          getOrganization(orgId),
           listRoles('books'),
         ]);
-        const allOrgs = extractArray<{ id: string; name: string }>(orgsRes);
-        const accessChecks = await Promise.all(
-          allOrgs.map(async (org) => {
-            try {
-              const accessRes = await checkAccess(org.id, 'books');
-              const data = extractData<{ hasAccess: boolean }>(accessRes);
-              return data?.hasAccess === true;
-            } catch {
-              return false;
-            }
-          })
-        );
-        setOrgs(allOrgs.filter((_, i) => accessChecks[i]));
+        const myOrg = extractData<{ id: string; name: string }>(orgRes);
+        setOrgs(myOrg ? [myOrg] : []);
         setRoles(extractArray<{ slug: string; name: string }>(rolesRes));
       } catch { /* ignore */ }
     };
     fetchDropdownData();
-  }, []);
+  }, [orgId]);
 
   const fetchUsers = useCallback(async () => {
     if (!orgId) return;
@@ -319,7 +308,9 @@ export default function UsersPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="email"
                   value={inviteForm.email}
@@ -329,7 +320,9 @@ export default function UsersPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    First Name <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={inviteForm.firstName}
@@ -348,16 +341,21 @@ export default function UsersPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Organization</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Organization <span className="text-red-500">*</span>
+                </label>
                 <ThemedSelect
                   value={inviteForm.orgId || orgId || ''}
                   onChange={(v) => setInviteForm({ ...inviteForm, orgId: v })}
                   options={orgs.map((o) => ({ value: o.id, label: o.name }))}
                   placeholder="Select an organization"
+                  searchable
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Role <span className="text-red-500">*</span>
+                </label>
                 <ThemedSelect
                   value={inviteForm.roleSlug}
                   onChange={(v) => setInviteForm({ ...inviteForm, roleSlug: v })}
@@ -367,7 +365,8 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={handleInvite}
-                className="w-full bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out"
+                disabled={!inviteForm.email.trim() || !inviteForm.firstName.trim() || !(inviteForm.orgId || orgId) || !inviteForm.roleSlug}
+                className="w-full py-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 bg-primary-600 text-white hover:bg-primary-700"
               >
                 Add User
               </button>

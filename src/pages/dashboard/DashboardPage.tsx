@@ -3,7 +3,6 @@ import { Users, Building2, CreditCard, BarChart3, Shield, Package } from 'lucide
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { extractArray } from '../../api/helpers';
-import { listOrganizations } from '../../api/organizations';
 import { getOrgSubscriptions, checkAccess } from '../../api/subscriptions';
 import { listOrgUsers } from '../../api/users';
 import { listRoles, getUserRolesForApp } from '../../api/roles';
@@ -39,7 +38,7 @@ export default function DashboardPage() {
       const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
       const results = await Promise.allSettled([
-        listOrganizations(),
+        orgId ? checkAccess(orgId, 'books') : Promise.resolve(null),
         orgId ? listOrgUsers(orgId) : Promise.resolve(null),
         listRoles('books'),
         orgId ? getOrgSubscriptions(orgId) : Promise.resolve(null),
@@ -86,22 +85,11 @@ export default function DashboardPage() {
         ).length;
       }
 
-      // Count only orgs with books app access
+      // 1 if the logged-in user's org has books access, otherwise 0
       let booksOrgCount = 0;
       if (results[0].status === 'fulfilled' && results[0].value) {
-        const allOrgs = extractArray<any>(results[0].value);
-        const accessChecks = await Promise.all(
-          allOrgs.map(async (org: any) => {
-            try {
-              const accessRes = await checkAccess(org.id, 'books');
-              const data = accessRes?.data;
-              return data?.hasAccess === true;
-            } catch {
-              return false;
-            }
-          })
-        );
-        booksOrgCount = accessChecks.filter(Boolean).length;
+        const data = (results[0].value as any)?.data;
+        booksOrgCount = data?.hasAccess === true ? 1 : 0;
       }
 
       setStats({
@@ -119,14 +107,6 @@ export default function DashboardPage() {
   }, [user?.orgId]);
 
   const cards: StatCard[] = [
-    {
-      label: 'Organizations',
-      count: stats.orgs,
-      icon: <Building2 className="w-6 h-6" />,
-      color: 'text-primary-600',
-      bgColor: 'bg-primary-50',
-      path: '/organizations',
-    },
     {
       label: 'Total Users',
       count: stats.users,

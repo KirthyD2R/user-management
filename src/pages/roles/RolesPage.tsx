@@ -19,8 +19,7 @@ import {
   listAllPermissions,
   removeRoleAssignment,
 } from "../../api/roles";
-import { listOrganizations } from "../../api/organizations";
-import { checkAccess } from "../../api/subscriptions";
+import { getOrganization } from "../../api/organizations";
 import { listOrgUsers } from "../../api/users";
 import { getApp } from "../../api/apps";
 import { useAuth } from "../../contexts/AuthContext";
@@ -124,34 +123,22 @@ export default function RolesPage() {
   }, []);
 
   const fetchDropdownData = async () => {
+    if (!authUser?.orgId) return;
     try {
-      const [orgsRes, appRes] = await Promise.all([
-        listOrganizations(1, 1000),
+      const [orgRes, appRes] = await Promise.all([
+        getOrganization(authUser.orgId),
         getApp('books'),
       ]);
-      const allOrgs = extractArray<{ id: string; name: string }>(orgsRes);
-
-      // Filter orgs to only those with books app access
-      const accessChecks = await Promise.all(
-        allOrgs.map(async (org) => {
-          try {
-            const accessRes = await checkAccess(org.id, 'books');
-            const data = extractData<{ hasAccess: boolean }>(accessRes);
-            return data?.hasAccess === true;
-          } catch {
-            return false;
-          }
-        })
-      );
-      setOrgs(allOrgs.filter((_, i) => accessChecks[i]));
+      const myOrg = extractData<{ id: string; name: string }>(orgRes);
+      if (myOrg) setOrgs([myOrg]);
 
       const appData = extractData<any>(appRes);
-      if (appData?.id) setBooksAppId(appData.id);
-
-      // Load users from current org
-      if (authUser?.orgId) {
-        fetchOrgUsers(authUser.orgId);
+      if (appData?.id) {
+        setBooksAppId(appData.id);
+        setAssignForm((prev) => ({ ...prev, orgId: authUser.orgId!, appId: appData.id }));
       }
+
+      fetchOrgUsers(authUser.orgId);
     } catch { /* ignore */ }
   };
 
@@ -581,18 +568,6 @@ export default function RolesPage() {
           </h2>
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Organization</label>
-              <ThemedSelect
-                value={assignForm.orgId}
-                onChange={(v) => {
-                  setAssignForm({ ...assignForm, orgId: v, userId: '', appId: booksAppId });
-                  fetchOrgUsers(v);
-                }}
-                options={orgs.map((o) => ({ value: o.id, label: o.name }))}
-                placeholder="Select an organization"
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
               <ThemedSelect

@@ -13,6 +13,7 @@ import { listPlans } from '../../api/plans';
 import { extractArray } from '../../api/helpers';
 import { Organization, App, Plan } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
+import DatePicker from '../../components/DatePicker';
 import Pagination from '../../components/Pagination';
 
 const LIMIT = 20;
@@ -37,7 +38,7 @@ export default function SubscriptionsPage() {
 
   // Create modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ orgId, appId: '', planId: '', startDate: '' });
+  const [createForm, setCreateForm] = useState({ orgId: '', appId: '', planId: '', startDate: '' });
   const [createLoading, setCreateLoading] = useState(false);
 
   // Change plan modal
@@ -102,7 +103,7 @@ export default function SubscriptionsPage() {
     try {
       await createSubscription(createForm);
       setShowCreateModal(false);
-      setCreateForm({ orgId, appId: '', planId: '', startDate: '' });
+      setCreateForm({ orgId: '', appId: '', planId: '', startDate: '' });
       await fetchSubscriptions();
     } catch {
       setError('Failed to create subscription.');
@@ -313,6 +314,7 @@ export default function SubscriptionsPage() {
                   onChange={(v) => setCreateForm({ ...createForm, orgId: v })}
                   options={orgOptions.map((o) => ({ value: o.id, label: o.name }))}
                   placeholder="Select an organization"
+                  searchable
                 />
               </div>
               <div>
@@ -335,11 +337,10 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={createForm.startDate}
-                  onChange={(e) => setCreateForm({ ...createForm, startDate: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  onChange={(v) => setCreateForm({ ...createForm, startDate: v })}
+                  placeholder="Select start date"
                 />
               </div>
             </div>
