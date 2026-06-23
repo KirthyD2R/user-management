@@ -35,6 +35,15 @@ const FINANCIAL_YEAR_START_MONTHS = [
   'December',
 ];
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-");
+}
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -59,7 +68,7 @@ export default function RegisterPage() {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
       if (field === 'orgName') {
-        updated.orgSlug = value.toLowerCase().replace(/\s+/g, '-');
+        updated.orgSlug = slugify(value);
       }
       return updated;
     });
@@ -71,8 +80,23 @@ export default function RegisterPage() {
     setSuccess(false);
     setLoading(true);
 
+    const baseSlug = slugify(formData.orgName);
     try {
-      await register(formData);
+      let attempt = 0;
+      while (true) {
+        const orgSlug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt}`;
+        try {
+          await register({ ...formData, orgSlug });
+          break;
+        } catch (err: any) {
+          const msg: string = err.response?.data?.message || err.message || '';
+          if (msg.toLowerCase().includes('slug') && attempt < 10) {
+            attempt++;
+          } else {
+            throw err;
+          }
+        }
+      }
       setSuccess(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');

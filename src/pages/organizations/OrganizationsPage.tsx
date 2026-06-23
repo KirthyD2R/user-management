@@ -178,8 +178,23 @@ const OrganizationsPage: React.FC = () => {
   const handleCreate = async () => {
     setSaving(true);
     setError(null);
+    const baseSlug = slugify(formData.name || "");
     try {
-      await createOrganization(formData);
+      let attempt = 0;
+      while (true) {
+        const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt}`;
+        try {
+          await createOrganization({ ...formData, slug });
+          break;
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "";
+          if (msg.toLowerCase().includes("slug") && attempt < 10) {
+            attempt++;
+          } else {
+            throw err;
+          }
+        }
+      }
       setShowCreateModal(false);
       setFormData({ ...emptyForm });
       await fetchOrgs();
@@ -264,6 +279,7 @@ const OrganizationsPage: React.FC = () => {
         <button
           onClick={() => {
             setFormData({ ...emptyForm });
+            setError(null);
             setShowCreateModal(true);
           }}
           className="inline-flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-all duration-200 ease-out"
@@ -388,6 +404,11 @@ const OrganizationsPage: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
+            {error && (
+              <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {renderField("Name", "name")}
               {renderField("Email", "email")}
@@ -407,7 +428,7 @@ const OrganizationsPage: React.FC = () => {
             </div>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => { setShowCreateModal(false); setError(null); }}
                 className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
               >
                 Cancel
