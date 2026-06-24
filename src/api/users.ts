@@ -61,3 +61,21 @@ export const inviteUser = async (data: {
   const response = await client.post("/api/users/invite", { ...data, email: data.email.toLowerCase() });
   return response.data;
 };
+
+export const notifyUserInvite = async (data: {
+  email: string;
+  firstName: string;
+  orgName: string;
+  roleName: string;
+}): Promise<{ ok: boolean }> => {
+  try {
+    const res = await fetch('/api/users/invite-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return { ok: res.ok };
+  } catch {
+    return { ok: false };
+  }
+};

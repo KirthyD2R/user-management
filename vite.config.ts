@@ -18,9 +18,11 @@ function passwordResetApi() {
     async configureServer(server: any) {
       const { default: express } = await import('express')
       const authRouter = (await import('./server/src/routes/auth.js')).default
+      const usersRouter = (await import('./server/src/routes/users.js')).default
       const app = express()
       app.use(express.json())
       app.use('/api/auth', authRouter)
+      app.use('/api/users', usersRouter)
       server.middlewares.use(app)
     },
   }

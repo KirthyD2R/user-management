@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import { pool } from './db.js';
 import { config } from './config.js';
 import { hashPassword } from './passwords.js';
-import { sendResetEmail } from './email.js';
+import { sendResetEmail, sendInviteNotification } from './email.js';
 
 const { table, idCol, emailCol, passwordCol } = config.users;
 
@@ -46,6 +46,21 @@ export async function requestPasswordReset(rawEmail) {
   } catch (err) {
     // Log server-side, but the caller still returns a generic success.
     console.error('[forgot-password]', err);
+  }
+}
+
+// Sends a welcome email to a newly invited user.
+// Returns { ok, status, message }.
+export async function notifyInvitedUser({ email, firstName, orgName, roleName, loginUrl }) {
+  if (!email || !firstName || !orgName || !roleName) {
+    return { ok: false, status: 400, message: 'email, firstName, orgName and roleName are required.' };
+  }
+  try {
+    await sendInviteNotification({ to: email, firstName, orgName, roleName, loginUrl });
+    return { ok: true, status: 200, message: 'Invitation email sent.' };
+  } catch (err) {
+    console.error('[invite-notify]', err);
+    return { ok: false, status: 500, message: 'Failed to send invitation email.' };
   }
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Edit2, XCircle, CheckCircle2, AppWindow, Search, X, Plus, Download, Upload, FileText } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { listOrgUsers, inviteUser, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
+import { listOrgUsers, inviteUser, notifyUserInvite, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
 import { getUserRolesForApp, listRoles } from '../../api/roles';
 import { getOrganization } from '../../api/organizations';
 import { extractArray, extractData, normalizeUser } from '../../api/helpers';
@@ -127,8 +127,17 @@ export default function UsersPage() {
       setShowInviteModal(false);
       setInviteForm({ email: '', firstName: '', lastName: '', orgId: '', appSlug: 'books', roleSlug: '' });
       fetchUsers();
+      // Send notification and report result
+      const roleName = roles.find((r) => r.slug === inviteForm.roleSlug)?.name || inviteForm.roleSlug;
+      const orgName = orgs[0]?.name || '';
+      const { ok } = await notifyUserInvite({ email: inviteForm.email, firstName: inviteForm.firstName, orgName, roleName });
+      if (ok) {
+        showToast('User added and invitation email sent successfully!', 'success');
+      } else {
+        showToast('User added, but the invitation email could not be sent.', 'error');
+      }
     } catch {
-      setError('Failed to send invite.');
+      setError('Failed to send invite. Please try again.');
     }
   };
 
@@ -312,18 +321,32 @@ export default function UsersPage() {
   const handleImport = async () => {
     if (!importRows.length || !orgId || !importRoleSlug) return;
     setImporting(true);
-    let success = 0, failed = 0;
+    const roleName = roles.find((r) => r.slug === importRoleSlug)?.name || importRoleSlug;
+    const orgName = orgs[0]?.name || '';
+    let success = 0, failed = 0, emailFailed = 0;
     for (const row of importRows) {
       try {
         await inviteUser({ ...row, orgId, appSlug: 'books', roleSlug: importRoleSlug });
         success++;
+        const { ok } = await notifyUserInvite({ email: row.email, firstName: row.firstName, orgName, roleName });
+        if (!ok) emailFailed++;
       } catch {
         failed++;
       }
     }
     setImportResult({ success, failed });
     setImporting(false);
-    if (success > 0) fetchUsers();
+    if (success > 0) {
+      fetchUsers();
+      if (emailFailed === 0) {
+        showToast(`${success} user(s) added and invitation emails sent successfully!`, 'success');
+      } else {
+        showToast(`${success} user(s) added, but ${emailFailed} invitation email(s) could not be sent.`, 'error');
+      }
+    }
+    if (failed > 0) {
+      showToast(`${failed} user(s) could not be added.`, 'error');
+    }
   };
 
   const openApps = async (u: User) => {
@@ -606,6 +629,7 @@ export default function UsersPage() {
                   onChange={(v) => setInviteForm({ ...inviteForm, roleSlug: v })}
                   options={roles.map((r) => ({ value: r.slug, label: r.name }))}
                   placeholder="Select a role"
+                  searchable
                 />
               </div>
               <button
