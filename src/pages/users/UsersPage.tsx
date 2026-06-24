@@ -141,8 +141,18 @@ export default function UsersPage() {
       } else {
         showToast('User added, but the invitation email could not be sent.', 'error');
       }
-    } catch {
-      setError('Failed to send invite. Please try again.');
+    } catch (err: any) {
+      const apiMsg: string =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        err?.message ||
+        '';
+      // Translate role-duplication error to a friendlier email-exists message
+      if (apiMsg.toLowerCase().includes('already has role') || apiMsg.toLowerCase().includes('already exists')) {
+        setError('A user with this email is already registered.');
+      } else {
+        setError(apiMsg || 'Failed to send invite. Please try again.');
+      }
     }
   };
 
@@ -439,9 +449,6 @@ export default function UsersPage() {
         )}
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg">{error}</div>
-      )}
 
       {/* Bulk action bar */}
       {someSelected && (
@@ -631,7 +638,7 @@ export default function UsersPage() {
                 <input
                   type="email"
                   value={inviteForm.email}
-                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                  onChange={(e) => { setInviteForm({ ...inviteForm, email: e.target.value }); setError(''); }}
                   onBlur={(e) => setInviteEmailError(validateEmail(e.target.value))}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${inviteEmailError ? "border-red-400" : "border-slate-300"}`}
                 />
@@ -649,6 +656,11 @@ export default function UsersPage() {
                   searchable
                 />
               </div>
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowInviteModal(false); setInviteForm({ email: '', firstName: '', lastName: '', orgId: '', appSlug: 'books', roleSlug: '' }); setError(''); }}
