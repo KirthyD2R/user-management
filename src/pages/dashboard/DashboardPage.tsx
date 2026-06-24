@@ -198,7 +198,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { to: '/users', icon: Users, title: 'Manage Users', desc: 'Invite and manage members' },
-            { to: '/organizations', icon: Building2, title: 'Organizations', desc: 'View and manage orgs' },
+            { to: '/organizations', icon: Building2, title: 'Organization', desc: 'View and manage orgs' },
             { to: '/roles', icon: Shield, title: 'Roles & Permissions', desc: 'Manage access control' },
             { to: '/subscriptions', icon: CreditCard, title: 'Subscriptions', desc: 'Manage plans and billing' },
           ].map(({ to, icon: Icon, title, desc }) => (

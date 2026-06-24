@@ -29,7 +29,7 @@ import ThemedSelect from "../../components/ThemedSelect";
 import Pagination from "../../components/Pagination";
 import { Role, Permission, User } from "../../types";
 
-const LIST_LIMIT = 20;
+const LIST_LIMIT = 10;
 
 type ActiveTab = "roles" | "assign" | "lookup" | "rolelookup" | "permissions";
 

@@ -1,22 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Plus, ArrowUpDown, Power, X, Loader2, Search } from 'lucide-react';
+import { XCircle, CheckCircle2, X, Loader2, Search, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
-  createSubscription,
   getOrgSubscriptions,
   changePlan,
   changeStatus,
 } from '../../api/subscriptions';
-import { listOrganizations } from '../../api/organizations';
-import { listApps } from '../../api/apps';
+import { getOrganization } from '../../api/organizations';
 import { listPlans } from '../../api/plans';
 import { extractArray } from '../../api/helpers';
-import { Organization, App, Plan } from '../../types';
+import { Plan } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
-import DatePicker from '../../components/DatePicker';
 import Pagination from '../../components/Pagination';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
-const LIMIT = 20;
+const LIMIT = 10;
 interface Sub {
   id: string;
   app?: { slug: string; name: string };
@@ -31,21 +29,18 @@ export default function SubscriptionsPage() {
   const orgId = user?.orgId || '';
 
   const [subscriptions, setSubscriptions] = useState<Sub[]>([]);
+  const [orgName, setOrgName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-
-  // Create modal
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ orgId: '', appId: '', planId: '', startDate: '' });
-  const [createLoading, setCreateLoading] = useState(false);
 
   // Change plan modal
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [planTarget, setPlanTarget] = useState<Sub | null>(null);
   const [newPlanId, setNewPlanId] = useState('');
   const [planLoading, setPlanLoading] = useState(false);
+  const [planOptions, setPlanOptions] = useState<Plan[]>([]);
 
   // Change status modal
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -53,35 +48,16 @@ export default function SubscriptionsPage() {
   const [newStatus, setNewStatus] = useState('active');
   const [statusLoading, setStatusLoading] = useState(false);
 
-  // Dropdown data for create modal
-  const [orgOptions, setOrgOptions] = useState<Organization[]>([]);
-  const [appOptions, setAppOptions] = useState<App[]>([]);
-  const [planOptions, setPlanOptions] = useState<Plan[]>([]);
-
   useEffect(() => {
-    if (orgId) {
-      fetchSubscriptions();
-    }
-    fetchDropdownOptions();
+    if (!orgId) return;
+    fetchSubscriptions();
+    getOrganization(orgId)
+      .then((res: any) => setOrgName((res?.data || res)?.name || ''))
+      .catch(() => {});
+    listPlans('books')
+      .then((res) => setPlanOptions(extractArray<Plan>(res)))
+      .catch(() => {});
   }, [orgId]);
-
-  const fetchDropdownOptions = async () => {
-    try {
-      const [orgsRes, appsRes, plansRes] = await Promise.all([
-        listOrganizations(1, 1000),
-        listApps(true),
-        listPlans('books'),
-      ]);
-      const allOrgs = extractArray<Organization>(orgsRes);
-      setOrgOptions(allOrgs);
-
-      const allApps = extractArray<App>(appsRes);
-      setAppOptions(allApps.filter((a) => a.slug === 'books'));
-      setPlanOptions(extractArray<Plan>(plansRes));
-    } catch {
-      // ignore - dropdowns will be empty
-    }
-  };
 
   const fetchSubscriptions = async () => {
     setLoading(true);
@@ -89,26 +65,11 @@ export default function SubscriptionsPage() {
     try {
       const res = await getOrgSubscriptions(orgId);
       const allSubs = extractArray<any>(res);
-      const booksSubs = allSubs.filter((s: any) => s.app?.slug === 'books');
-      setSubscriptions(booksSubs);
+      setSubscriptions(allSubs.filter((s: any) => s.app?.slug === 'books'));
     } catch {
       setError('Failed to load subscriptions.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreate = async () => {
-    setCreateLoading(true);
-    try {
-      await createSubscription(createForm);
-      setShowCreateModal(false);
-      setCreateForm({ orgId: '', appId: '', planId: '', startDate: '' });
-      await fetchSubscriptions();
-    } catch {
-      setError('Failed to create subscription.');
-    } finally {
-      setCreateLoading(false);
     }
   };
 
@@ -136,23 +97,23 @@ export default function SubscriptionsPage() {
       setShowStatusModal(false);
       setStatusTarget(null);
       await fetchSubscriptions();
-    } catch {
-      setError('Failed to change status.');
+    } catch (err: any) {
+      const issues = err?.response?.data?.error?.issues;
+      const msg = issues?.length
+        ? issues.map((i: any) => i.message).join('. ')
+        : err?.response?.data?.message || 'Failed to change status.';
+      setError(msg);
     } finally {
       setStatusLoading(false);
     }
   };
 
-  // Reset to the first page whenever the search term changes.
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
+  useEffect(() => { setPage(1); }, [search]);
 
-  // Client-side partial search (case-insensitive) across app, plan and status.
   const query = search.trim().toLowerCase();
   const filteredSubs = query
     ? subscriptions.filter((s) =>
-        [s.app?.name, s.plan?.name, s.status].some((f) => (f || '').toLowerCase().includes(query))
+        [s.plan?.name, s.status].some((f) => (f || '').toLowerCase().includes(query))
       )
     : subscriptions;
   const totalPages = Math.max(1, Math.ceil(filteredSubs.length / LIMIT));
@@ -162,7 +123,7 @@ export default function SubscriptionsPage() {
     const map: Record<string, string> = {
       active: 'bg-green-100 text-green-700',
       trialing: 'bg-yellow-100 text-yellow-700',
-      cancelled: 'bg-red-100 text-red-700',
+      suspended: 'bg-red-100 text-red-700',
       expired: 'bg-slate-100 text-slate-600',
     };
     return map[status] || 'bg-slate-100 text-slate-600';
@@ -170,16 +131,8 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-accent-500">Subscriptions</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition"
-        >
-          <Plus className="h-4 w-4" />
-          Create Subscription
-        </button>
       </div>
 
       {error && (
@@ -188,94 +141,90 @@ export default function SubscriptionsPage() {
         </div>
       )}
 
-      {/* Search */}
       <div className="flex gap-2 mb-6">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by app, plan or status..."
+            placeholder="Search by plan or status..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         {search && (
-          <button
-            onClick={() => setSearch('')}
-            className="px-4 py-2 text-slate-500 hover:text-slate-700 transition-all duration-200 ease-out"
-          >
+          <button onClick={() => setSearch('')} className="px-4 py-2 text-slate-500 hover:text-slate-700 transition-all duration-200 ease-out">
             Clear
           </button>
         )}
       </div>
 
-      {/* Subscriptions Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
           </div>
         ) : filteredSubs.length === 0 ? (
-          <div className="text-center py-16 text-slate-500 text-sm">
-            No subscriptions found.
-          </div>
+          <div className="text-center py-16 text-slate-500 text-sm">No subscriptions found.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-slate-600 uppercase text-xs tracking-wider">
                 <tr>
-                  <th className="px-6 py-3">App</th>
+                  <th className="px-6 py-3">Organization</th>
                   <th className="px-6 py-3">Plan</th>
-                  <th className="px-6 py-3">Max Users</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Start Date</th>
-                  <th className="px-6 py-3">Expires</th>
-                  <th className="px-6 py-3">Actions</th>
+                  <th className="px-6 py-3 text-center">Max Users</th>
+                  <th className="px-6 py-3 text-center">Status</th>
+                  <th className="px-6 py-3 text-center">Start Date</th>
+                  <th className="px-6 py-3 text-center">Expires</th>
+                  <th className="px-6 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {pagedSubs.map((sub) => (
                   <tr key={sub.id} className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4 font-medium text-slate-900">{sub.app?.name || '-'}</td>
+                    <td className="px-6 py-4 font-medium text-slate-900">{orgName || '-'}</td>
                     <td className="px-6 py-4 text-slate-700">{sub.plan?.name || '-'}</td>
-                    <td className="px-6 py-4 text-slate-700">{sub.plan?.maxUsers ?? '-'}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge(sub.status)}`}
-                      >
+                    <td className="px-6 py-4 text-slate-700 text-center">{sub.plan?.maxUsers ?? '-'}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge(sub.status)}`}>
                         {sub.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-700">
+                    <td className="px-6 py-4 text-slate-700 text-center">
                       {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-6 py-4 text-slate-700">
+                    <td className="px-6 py-4 text-slate-700 text-center">
                       {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => {
                             setPlanTarget(sub);
-                            setNewPlanId(sub.plan?.slug || '');
+                            setNewPlanId('');
                             setShowPlanModal(true);
                           }}
-                          className="p-1.5 rounded-lg text-slate-500 hover:bg-primary-50 hover:text-primary-600 transition-all duration-200 ease-out"
-                          title="Change Plan"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-primary-600 border border-primary-200 hover:bg-primary-50 transition-all duration-200 ease-out"
+                          title="Upgrade Plan"
                         >
-                          <ArrowUpDown className="h-4 w-4" />
+                          <ArrowUpDown className="h-3.5 w-3.5" />
+                          Upgrade
                         </button>
                         <button
                           onClick={() => {
                             setStatusTarget(sub);
-                            setNewStatus(sub.status);
-                            setShowStatusModal(true);
+                            setNewStatus(sub.status === 'active' ? 'suspended' : 'active');
+                            if (sub.status === 'active') { setShowStatusModal(true); return; }
+                            // activate directly
+                            changeStatus(sub.id, 'active').then(fetchSubscriptions).catch(() => setError('Failed to activate.'));
                           }}
-                          className="p-1.5 rounded-lg text-slate-500 hover:bg-primary-50 hover:text-primary-600 transition-all duration-200 ease-out"
-                          title="Change Status"
+                          className={`p-1.5 rounded-lg transition-all duration-200 ease-out ${sub.status === 'active' ? 'text-slate-500 hover:text-red-600 hover:bg-red-50' : 'text-slate-500 hover:text-green-600 hover:bg-green-50'}`}
+                          title={sub.status === 'active' ? 'Deactivate' : 'Activate'}
                         >
-                          <Power className="h-4 w-4" />
+                          {sub.status === 'active'
+                            ? <XCircle className="h-4 w-4" />
+                            : <CheckCircle2 className="h-4 w-4" />}
                         </button>
                       </div>
                     </td>
@@ -293,169 +242,60 @@ export default function SubscriptionsPage() {
         )}
       </div>
 
-      {/* Create Subscription Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-medium text-slate-700">Create Subscription</h2>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Organization</label>
-                <ThemedSelect
-                  value={createForm.orgId}
-                  onChange={(v) => setCreateForm({ ...createForm, orgId: v })}
-                  options={orgOptions.map((o) => ({ value: o.id, label: o.name }))}
-                  placeholder="Select an organization"
-                  searchable
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">App</label>
-                <ThemedSelect
-                  value={createForm.appId}
-                  onChange={(v) => setCreateForm({ ...createForm, appId: v })}
-                  options={appOptions.map((a) => ({ value: a.id, label: a.name }))}
-                  placeholder="Select an app"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Plan</label>
-                <ThemedSelect
-                  value={createForm.planId}
-                  onChange={(v) => setCreateForm({ ...createForm, planId: v })}
-                  options={planOptions.map((p) => ({ value: p.id, label: p.name }))}
-                  placeholder="Select a plan"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-                <DatePicker
-                  value={createForm.startDate}
-                  onChange={(v) => setCreateForm({ ...createForm, startDate: v })}
-                  placeholder="Select start date"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreate}
-                disabled={createLoading}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 transition"
-              >
-                {createLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Change Plan Modal */}
+      {/* Upgrade Plan Modal */}
       {showPlanModal && planTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-medium text-slate-700">Change Plan</h2>
-              <button
-                onClick={() => { setShowPlanModal(false); setPlanTarget(null); }}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition"
-              >
+              <h2 className="text-base font-medium text-slate-700">Upgrade Plan</h2>
+              <button onClick={() => { setShowPlanModal(false); setPlanTarget(null); }}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Current Plan</label>
-                <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">{planTarget.plan?.name || planTarget.plan?.slug || '-'}</p>
+                <p className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
+                  {planTarget.plan?.name || '-'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">New Plan</label>
                 <ThemedSelect
                   value={newPlanId}
                   onChange={(v) => setNewPlanId(v)}
-                  options={planOptions.map((p) => ({ value: p.id, label: p.name }))}
+                  options={planOptions
+                    .filter((p) => p.id !== planTarget.plan?.slug && p.name !== planTarget.plan?.name)
+                    .map((p) => ({ value: p.id, label: `${p.name}${p.price > 0 ? ` — ${p.currency} ${p.price}/${p.interval}` : ''}` }))}
                   placeholder="Select a plan"
                 />
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => { setShowPlanModal(false); setPlanTarget(null); }}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
-              >
+              <button onClick={() => { setShowPlanModal(false); setPlanTarget(null); }}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
                 Cancel
               </button>
-              <button
-                onClick={handleChangePlan}
-                disabled={planLoading || !newPlanId}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 transition"
-              >
+              <button onClick={handleChangePlan} disabled={planLoading || !newPlanId}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 transition">
                 {planLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Update Plan
+                Confirm Upgrade
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Change Status Modal */}
       {showStatusModal && statusTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-medium text-slate-700">Change Status</h2>
-              <button
-                onClick={() => { setShowStatusModal(false); setStatusTarget(null); }}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-              <select
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="active">Active</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="suspended">Suspended</option>
-                <option value="expired">Expired</option>
-              </select>
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => { setShowStatusModal(false); setStatusTarget(null); }}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleChangeStatus}
-                disabled={statusLoading}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 transition"
-              >
-                {statusLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Update Status
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Deactivate Subscription"
+          message={`Are you sure you want to deactivate the ${statusTarget.plan?.name || ''} subscription? Access will be suspended immediately.`}
+          confirmLabel="Yes, Deactivate"
+          loading={statusLoading}
+          onConfirm={handleChangeStatus}
+          onCancel={() => { setShowStatusModal(false); setStatusTarget(null); }}
+        />
       )}
     </div>
   );

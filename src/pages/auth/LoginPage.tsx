@@ -97,6 +97,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-end">
               <Link
                 to="/forgot-password"
+                state={{ email }}
                 className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200"
               >
                 Forgot your password?

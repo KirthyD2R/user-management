@@ -9,20 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    orgName: string;
-    orgSlug: string;
-    appSlug: string;
-    gstin: string;
-    pan: string;
-    currency: string;
-    financialYearStart: string;
-    timezone: string;
-  }) => Promise<void>;
+  loginWithToken: (token: string, refreshToken: string, userData: User) => void;
   logout: () => Promise<void>;
 }
 
@@ -68,21 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
   };
 
-  const register = async (data: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    orgName: string;
-    orgSlug: string;
-    appSlug: string;
-    gstin: string;
-    pan: string;
-    currency: string;
-    financialYearStart: string;
-    timezone: string;
-  }) => {
-    await authApi.register(data);
+  const loginWithToken = (token: string, refresh: string, userData: User) => {
+    localStorage.setItem('accessToken', token);
+    localStorage.setItem('refreshToken', refresh);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setAccessToken(token);
+    setUser(userData);
   };
 
   const logout = async () => {
@@ -103,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, accessToken, isAuthenticated, isLoading, login, register, logout }}
+      value={{ user, accessToken, isAuthenticated, isLoading, login, loginWithToken, logout }}
     >
       {children}
     </AuthContext.Provider>

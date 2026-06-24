@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Pencil, Power, AppWindow, Search, X, Plus } from 'lucide-react';
+import { Edit2, XCircle, CheckCircle2, AppWindow, Search, X, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { listOrgUsers, inviteUser, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
 import { getUserRolesForApp, listRoles } from '../../api/roles';
@@ -9,8 +9,9 @@ import { validateEmail, validatePhone } from '../../utils/validators';
 import { User, App } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
 import Pagination from '../../components/Pagination';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
-const LIMIT = 20;
+const LIMIT = 10;
 
 export default function UsersPage() {
   const { user: authUser } = useAuth();
@@ -20,6 +21,8 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmUser, setConfirmUser] = useState<User | null>(null);
+  const [toggleLoading, setToggleLoading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -144,12 +147,29 @@ export default function UsersPage() {
   };
 
   const handleToggleStatus = async (u: User) => {
+    if (u.isActive) { setConfirmUser(u); return; }
+    // activate directly — no confirmation needed
     setError('');
     try {
-      await toggleUserStatus(u.id, !u.isActive);
+      await toggleUserStatus(u.id, true);
       fetchUsers();
     } catch {
-      setError('Failed to toggle user status.');
+      setError('Failed to activate user.');
+    }
+  };
+
+  const handleConfirmDeactivate = async () => {
+    if (!confirmUser) return;
+    setToggleLoading(true);
+    setError('');
+    try {
+      await toggleUserStatus(confirmUser.id, false);
+      fetchUsers();
+      setConfirmUser(null);
+    } catch {
+      setError('Failed to deactivate user.');
+    } finally {
+      setToggleLoading(false);
     }
   };
 
@@ -269,7 +289,7 @@ export default function UsersPage() {
                         className="p-1.5 text-slate-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-all duration-200 ease-out"
                         title="Edit"
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleToggleStatus(u)}
@@ -280,7 +300,9 @@ export default function UsersPage() {
                         }`}
                         title={u.isActive ? 'Deactivate' : 'Activate'}
                       >
-                        <Power className="w-4 h-4" />
+                        {u.isActive
+                          ? <XCircle className="w-4 h-4" />
+                          : <CheckCircle2 className="w-4 h-4" />}
                       </button>
                     </div>
                   </td>
@@ -299,6 +321,17 @@ export default function UsersPage() {
         />
       </div>
 
+      {confirmUser && (
+        <ConfirmDialog
+          title="Deactivate User"
+          message={`Are you sure you want to deactivate ${confirmUser.firstName} ${confirmUser.lastName}? They will lose access immediately.`}
+          confirmLabel="Yes, Deactivate"
+          loading={toggleLoading}
+          onConfirm={handleConfirmDeactivate}
+          onCancel={() => setConfirmUser(null)}
+        />
+      )}
+
       {/* Invite User Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -310,19 +343,6 @@ export default function UsersPage() {
               </button>
             </div>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={inviteForm.email}
-                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                  onBlur={(e) => setInviteEmailError(validateEmail(e.target.value))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${inviteEmailError ? "border-red-400" : "border-slate-300"}`}
-                />
-                {inviteEmailError && <p className="mt-1 text-xs text-red-500">{inviteEmailError}</p>}
-              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -347,15 +367,16 @@ export default function UsersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Organization <span className="text-red-500">*</span>
+                  Email <span className="text-red-500">*</span>
                 </label>
-                <ThemedSelect
-                  value={inviteForm.orgId || orgId || ''}
-                  onChange={(v) => setInviteForm({ ...inviteForm, orgId: v })}
-                  options={orgs.map((o) => ({ value: o.id, label: o.name }))}
-                  placeholder="Select an organization"
-                  searchable
+                <input
+                  type="email"
+                  value={inviteForm.email}
+                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                  onBlur={(e) => setInviteEmailError(validateEmail(e.target.value))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${inviteEmailError ? "border-red-400" : "border-slate-300"}`}
                 />
+                {inviteEmailError && <p className="mt-1 text-xs text-red-500">{inviteEmailError}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -370,7 +391,7 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={handleInvite}
-                disabled={!inviteForm.email.trim() || !inviteForm.firstName.trim() || !(inviteForm.orgId || orgId) || !inviteForm.roleSlug || !!inviteEmailError}
+                disabled={!inviteForm.email.trim() || !inviteForm.firstName.trim() || !inviteForm.roleSlug || !!inviteEmailError}
                 className="w-full py-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 bg-primary-600 text-white hover:bg-primary-700"
               >
                 Add User
