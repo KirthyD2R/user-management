@@ -110,7 +110,7 @@ export default function Layout() {
       {/* ── Full-width top header ── */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-brand-header flex items-center justify-between px-4 sm:px-6 z-40 shadow-sm">
 
-        {/* Left: mobile hamburger + app title */}
+        {/* Left: mobile hamburger + logo + app title */}
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => setMobileOpen(true)}
@@ -119,6 +119,9 @@ export default function Layout() {
           >
             <Menu size={20} />
           </button>
+          <div className="w-8 h-8 shrink-0 bg-white/15 rounded-lg flex items-center justify-center ring-1 ring-white/20">
+            <Shield size={17} className="text-white" />
+          </div>
           <h1 className="text-lg sm:text-xl font-semibold text-white tracking-tight truncate">
             User Management
           </h1>
