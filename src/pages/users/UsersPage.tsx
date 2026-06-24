@@ -28,6 +28,7 @@ export default function UsersPage() {
   const [showBulkConfirm, setShowBulkConfirm] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteForm, setInviteForm] = useState({
@@ -106,17 +107,19 @@ export default function UsersPage() {
   // Reset to the first page whenever the search term changes.
   useEffect(() => {
     setPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, statusFilter]);
 
-  // Client-side partial search (case-insensitive) across name and email.
+  // Client-side filter: search + status
   const query = searchQuery.trim().toLowerCase();
-  const filteredUsers = query
-    ? allUsers.filter(
-        (u) =>
-          `${u.firstName} ${u.lastName}`.toLowerCase().includes(query) ||
-          (u.email || '').toLowerCase().includes(query)
-      )
-    : allUsers;
+  const filteredUsers = allUsers.filter((u) => {
+    if (statusFilter === 'active' && !u.isActive) return false;
+    if (statusFilter === 'inactive' && u.isActive) return false;
+    if (!query) return true;
+    return (
+      `${u.firstName} ${u.lastName}`.toLowerCase().includes(query) ||
+      (u.email || '').toLowerCase().includes(query)
+    );
+  });
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / LIMIT));
   const users = filteredUsers.slice((page - 1) * LIMIT, page * LIMIT);
 
@@ -412,6 +415,18 @@ export default function UsersPage() {
             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
+        <div className="w-40">
+          <ThemedSelect
+            value={statusFilter}
+            onChange={(v) => setStatusFilter(v as 'all' | 'active' | 'inactive')}
+            options={[
+              { value: 'all', label: 'All Statuses' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+            placeholder="All Statuses"
+          />
+        </div>
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
@@ -632,13 +647,21 @@ export default function UsersPage() {
                   searchable
                 />
               </div>
-              <button
-                onClick={handleInvite}
-                disabled={!inviteForm.email.trim() || !inviteForm.firstName.trim() || !inviteForm.roleSlug || !!inviteEmailError}
-                className="w-full py-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 bg-primary-600 text-white hover:bg-primary-700"
-              >
-                Add User
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowInviteModal(false); setInviteForm({ email: '', firstName: '', lastName: '', orgId: '', appSlug: 'books', roleSlug: '' }); setError(''); }}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleInvite}
+                  disabled={!inviteForm.email.trim() || !inviteForm.firstName.trim() || !inviteForm.roleSlug || !!inviteEmailError}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 bg-primary-600 text-white hover:bg-primary-700"
+                >
+                  Add User
+                </button>
+              </div>
             </div>
           </div>
         </div>

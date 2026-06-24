@@ -631,7 +631,7 @@ export default function RolesPage() {
             {assignMode === "user-roles" ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">User <span className="text-red-500">*</span></label>
                   <ThemedSelect
                     value={assignForm.userId}
                     onChange={(v) => setAssignForm({ ...assignForm, userId: v })}
@@ -642,7 +642,7 @@ export default function RolesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Roles <span className="text-slate-400 font-normal">(select multiple)</span>
+                    Roles <span className="text-slate-400 font-normal">(select multiple)</span> <span className="text-red-500">*</span>
                   </label>
                   <MultiSelect
                     values={assignRoleIds}
@@ -656,7 +656,7 @@ export default function RolesPage() {
               <>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Users <span className="text-slate-400 font-normal">(select multiple)</span>
+                    Users <span className="text-slate-400 font-normal">(select multiple)</span> <span className="text-red-500">*</span>
                   </label>
                   <MultiSelect
                     values={assignUserIds}
@@ -666,7 +666,7 @@ export default function RolesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Role <span className="text-red-500">*</span></label>
                   <ThemedSelect
                     value={assignForm.roleId}
                     onChange={(v) => setAssignForm({ ...assignForm, roleId: v })}
@@ -687,8 +687,11 @@ export default function RolesPage() {
 
             <button
               onClick={handleAssign}
-              disabled={assignLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50"
+              disabled={
+                assignLoading ||
+                (assignMode === "user-roles" ? (!assignForm.userId || assignRoleIds.length === 0) : (assignUserIds.length === 0 || !assignForm.roleId))
+              }
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {assignLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -711,7 +714,7 @@ export default function RolesPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">User <span className="text-red-500">*</span></label>
               <ThemedSelect
                 value={lookupUserId}
                 onChange={(v) => setLookupUserId(v)}
@@ -732,8 +735,8 @@ export default function RolesPage() {
 
             <button
               onClick={handleLookup}
-              disabled={lookupLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50"
+              disabled={lookupLoading || !lookupUserId}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {lookupLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -795,7 +798,7 @@ export default function RolesPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Role <span className="text-red-500">*</span></label>
               <ThemedSelect
                 value={lookupRoleId}
                 onChange={(v) => setLookupRoleId(v)}
@@ -807,8 +810,8 @@ export default function RolesPage() {
 
             <button
               onClick={handleRoleLookup}
-              disabled={roleUsersLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50"
+              disabled={roleUsersLoading || !lookupRoleId}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {roleUsersLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
