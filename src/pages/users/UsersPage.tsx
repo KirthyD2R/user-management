@@ -10,11 +10,13 @@ import { User, App } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
 import Pagination from '../../components/Pagination';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { useToast } from '../../components/Toast';
 
 const LIMIT = 10;
 
 export default function UsersPage() {
   const { user: authUser } = useAuth();
+  const { showToast } = useToast();
   const orgId = authUser?.orgId;
 
   const [allUsers, setAllUsers] = useState<(User & { roleNames: string[] })[]>([]);

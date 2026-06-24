@@ -17,10 +17,16 @@ export default function MultiSelect({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [focusedIndex, setFocusedIndex] = useState(0);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const filtered = query.trim()
+    ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()))
+    : options;
 
   useEffect(() => {
     if (!open) return;
@@ -37,9 +43,50 @@ export default function MultiSelect({
   }, [open]);
 
   useEffect(() => {
-    if (open) setTimeout(() => searchRef.current?.focus(), 50);
-    else setQuery("");
+    if (open) {
+      setFocusedIndex(0);
+      setTimeout(() => searchRef.current?.focus(), 50);
+    } else {
+      setQuery("");
+      setFocusedIndex(0);
+    }
   }, [open]);
+
+  useEffect(() => {
+    setFocusedIndex(0);
+  }, [query]);
+
+  useEffect(() => {
+    if (open && focusedIndex >= 0) {
+      itemRefs.current[focusedIndex]?.scrollIntoView({ block: "nearest" });
+    }
+  }, [focusedIndex, open]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        handleToggle();
+      }
+      return;
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
+      btnRef.current?.focus();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setFocusedIndex((i) => Math.min(i + 1, filtered.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setFocusedIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (focusedIndex >= 0 && filtered[focusedIndex]) {
+        toggle(filtered[focusedIndex].value);
+      }
+    }
+  };
 
   const handleToggle = () => {
     if (!open && btnRef.current) {
@@ -65,10 +112,6 @@ export default function MultiSelect({
     onChange(values.filter((v) => v !== val));
   };
 
-  const filtered = query.trim()
-    ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()))
-    : options;
-
   const selectedLabels = values.map((v) => options.find((o) => o.value === v)?.label).filter(Boolean) as string[];
 
   const dropdown = open
@@ -77,6 +120,7 @@ export default function MultiSelect({
           data-ms-dropdown
           style={dropdownStyle}
           className="bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 flex flex-col"
+          onKeyDown={handleKeyDown}
         >
           <div className="p-2 border-b border-slate-100 shrink-0">
             <div className="flex items-center gap-2 px-2 py-1.5 border border-slate-200 rounded-md bg-slate-50">
@@ -86,6 +130,7 @@ export default function MultiSelect({
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Search…"
                 className="flex-1 text-sm bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
               />
@@ -95,15 +140,22 @@ export default function MultiSelect({
             {filtered.length === 0 ? (
               <p className="px-3 py-2 text-sm text-slate-400">No results</p>
             ) : (
-              filtered.map((opt) => {
+              filtered.map((opt, idx) => {
                 const checked = values.includes(opt.value);
+                const isFocused = idx === focusedIndex;
                 return (
                   <button
                     key={opt.value}
+                    ref={(el) => { itemRefs.current[idx] = el; }}
                     type="button"
                     onClick={() => toggle(opt.value)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-primary-50 ${
-                      checked ? "bg-primary-50 text-primary-700 font-medium" : "text-slate-700"
+                    onMouseEnter={() => setFocusedIndex(idx)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors ${
+                      isFocused
+                        ? "bg-primary-50 text-primary-700"
+                        : checked
+                        ? "bg-primary-50 text-primary-700 font-medium"
+                        : "text-slate-700 hover:bg-primary-50"
                     }`}
                   >
                     <span className={`w-4 h-4 flex items-center justify-center rounded border flex-shrink-0 ${
@@ -139,6 +191,7 @@ export default function MultiSelect({
         ref={btnRef}
         type="button"
         onClick={handleToggle}
+        onKeyDown={handleKeyDown}
         className="w-full flex items-center justify-between border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white text-left focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[38px]"
       >
         <div className="flex flex-wrap gap-1 flex-1 min-w-0 mr-2">
