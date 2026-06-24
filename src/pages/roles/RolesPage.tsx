@@ -26,6 +26,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { extractArray, extractData } from "../../api/helpers";
 import { useToast } from "../../components/Toast";
 import ThemedSelect from "../../components/ThemedSelect";
+import MultiSelect from "../../components/MultiSelect";
 import Pagination from "../../components/Pagination";
 import { Role, Permission, User } from "../../types";
 
@@ -52,13 +53,18 @@ export default function RolesPage() {
   const [modalRole, setModalRole] = useState<Role | null>(null);
   const [modalPermissions, setModalPermissions] = useState<Permission[]>([]);
   const [modalLoading, setModalLoading] = useState(false);
+  const [modalSearch, setModalSearch] = useState("");
 
+  // "user-roles": 1 user + multi roles  |  "users-role": multi users + 1 role
+  const [assignMode, setAssignMode] = useState<"user-roles" | "users-role">("user-roles");
   const [assignForm, setAssignForm] = useState({
     userId: "",
     orgId: "",
     appId: "",
     roleId: "",
   });
+  const [assignUserIds, setAssignUserIds] = useState<string[]>([]);
+  const [assignRoleIds, setAssignRoleIds] = useState<string[]>([]);
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignMessage, setAssignMessage] = useState("");
   const [assignError, setAssignError] = useState("");
@@ -169,6 +175,7 @@ export default function RolesPage() {
     setModalOpen(false);
     setModalRole(null);
     setModalPermissions([]);
+    setModalSearch("");
   };
 
   const groupByModule = (perms: Permission[]) => {
@@ -181,23 +188,50 @@ export default function RolesPage() {
   };
 
   const handleAssign = async () => {
-    if (!assignForm.userId || !assignForm.orgId || !assignForm.appId || !assignForm.roleId) {
-      setAssignError("All fields are required.");
-      return;
-    }
-    setAssignLoading(true);
     setAssignError("");
     setAssignMessage("");
-    try {
-      await assignRole(assignForm);
-      showToast("Role assigned successfully!", "success");
-      setAssignForm({ userId: "", orgId: "", appId: booksAppId, roleId: "" });
-    } catch (err: any) {
-      const msg = err?.response?.data?.error?.message || err?.response?.data?.message || "Failed to assign role.";
-      showToast(msg, "error");
-    } finally {
-      setAssignLoading(false);
+
+    if (assignMode === "user-roles") {
+      if (!assignForm.userId || assignRoleIds.length === 0) {
+        setAssignError("Select a user and at least one role.");
+        return;
+      }
+      setAssignLoading(true);
+      const results = await Promise.allSettled(
+        assignRoleIds.map((roleId) =>
+          assignRole({ userId: assignForm.userId, orgId: assignForm.orgId, appId: assignForm.appId, roleId })
+        )
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      if (failed === 0) {
+        showToast(`${assignRoleIds.length} role(s) assigned successfully!`, "success");
+        setAssignRoleIds([]);
+        setAssignForm((p) => ({ ...p, userId: "" }));
+      } else {
+        showToast(`${results.length - failed} assigned, ${failed} failed.`, "error");
+      }
+    } else {
+      if (assignUserIds.length === 0 || !assignForm.roleId) {
+        setAssignError("Select at least one user and a role.");
+        return;
+      }
+      setAssignLoading(true);
+      const results = await Promise.allSettled(
+        assignUserIds.map((userId) =>
+          assignRole({ userId, orgId: assignForm.orgId, appId: assignForm.appId, roleId: assignForm.roleId })
+        )
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      if (failed === 0) {
+        showToast(`Role assigned to ${assignUserIds.length} user(s) successfully!`, "success");
+        setAssignUserIds([]);
+        setAssignForm((p) => ({ ...p, roleId: "" }));
+      } else {
+        showToast(`${results.length - failed} assigned, ${failed} failed.`, "error");
+      }
     }
+
+    setAssignLoading(false);
   };
 
   const handleLookup = async () => {
@@ -567,34 +601,88 @@ export default function RolesPage() {
             Assign Role
           </h2>
 
+          {/* Mode toggle */}
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden mb-5 text-sm font-medium">
+            <button
+              type="button"
+              onClick={() => { setAssignMode("user-roles"); setAssignError(""); }}
+              className={`flex-1 py-2 transition-colors duration-150 ${
+                assignMode === "user-roles"
+                  ? "bg-primary-600 text-white"
+                  : "bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              1 User → Multiple Roles
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAssignMode("users-role"); setAssignError(""); }}
+              className={`flex-1 py-2 border-l border-slate-200 transition-colors duration-150 ${
+                assignMode === "users-role"
+                  ? "bg-primary-600 text-white"
+                  : "bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              Multiple Users → 1 Role
+            </button>
+          </div>
+
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
-              <ThemedSelect
-                value={assignForm.userId}
-                onChange={(v) => setAssignForm({ ...assignForm, userId: v })}
-                options={users.map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
-                placeholder={assignForm.orgId ? 'Select a user' : 'Select an org first'}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-              <ThemedSelect
-                value={assignForm.roleId}
-                onChange={(v) => setAssignForm({ ...assignForm, roleId: v })}
-                options={roles.map((r) => ({ value: r.id, label: r.name }))}
-                placeholder="Select a role"
-              />
-            </div>
+            {assignMode === "user-roles" ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">User</label>
+                  <ThemedSelect
+                    value={assignForm.userId}
+                    onChange={(v) => setAssignForm({ ...assignForm, userId: v })}
+                    options={users.map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
+                    placeholder="Select a user"
+                    searchable
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Roles <span className="text-slate-400 font-normal">(select multiple)</span>
+                  </label>
+                  <MultiSelect
+                    values={assignRoleIds}
+                    onChange={setAssignRoleIds}
+                    options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                    placeholder="Select roles"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Users <span className="text-slate-400 font-normal">(select multiple)</span>
+                  </label>
+                  <MultiSelect
+                    values={assignUserIds}
+                    onChange={setAssignUserIds}
+                    options={users.map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
+                    placeholder="Select users"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                  <ThemedSelect
+                    value={assignForm.roleId}
+                    onChange={(v) => setAssignForm({ ...assignForm, roleId: v })}
+                    options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                    placeholder="Select a role"
+                    searchable
+                  />
+                </div>
+              </>
+            )}
 
             {assignError && (
               <div className="flex items-center gap-2 text-red-600">
                 <AlertCircle className="w-4 h-4" />
                 <span className="text-sm">{assignError}</span>
               </div>
-            )}
-            {assignMessage && (
-              <p className="text-sm text-green-600 font-medium">{assignMessage}</p>
             )}
 
             <button
@@ -631,6 +719,7 @@ export default function RolesPage() {
                   .filter((u) => booksUserIds.has(u.id))
                   .map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
                 placeholder={booksUsersLoading ? "Loading books users..." : "Select a user"}
+                searchable
               />
             </div>
 
@@ -712,6 +801,7 @@ export default function RolesPage() {
                 onChange={(v) => setLookupRoleId(v)}
                 options={roles.map((r) => ({ value: r.id, label: r.name }))}
                 placeholder="Select a role"
+                searchable
               />
             </div>
 
@@ -781,6 +871,7 @@ export default function RolesPage() {
                   ...moduleOptions.map((m) => ({ value: m, label: m })),
                 ]}
                 placeholder="Filter by module"
+                searchable
               />
             </div>
             {(permModule || permSearch) && (
@@ -989,6 +1080,22 @@ export default function RolesPage() {
               </button>
             </div>
 
+            {/* Modal search bar */}
+            {!modalLoading && modalPermissions.length > 0 && (
+              <div className="px-6 py-3 border-b border-slate-100 shrink-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search permissions…"
+                    value={modalSearch}
+                    onChange={(e) => setModalSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="overflow-y-auto p-6">
               {modalLoading ? (
                 <div className="flex items-center justify-center py-8">
@@ -1001,7 +1108,18 @@ export default function RolesPage() {
                 </p>
               ) : (
                 <div className="space-y-6">
-                  {Object.entries(groupByModule(modalPermissions)).map(([mod, perms]) => (
+                  {(() => {
+                    const q = modalSearch.trim().toLowerCase();
+                    const filtered = q
+                      ? modalPermissions.filter((p) =>
+                          [p.description, p.name, p.slug, p.module, p.action].some((f) =>
+                            (f || "").toLowerCase().includes(q)
+                          )
+                        )
+                      : modalPermissions;
+                    if (filtered.length === 0)
+                      return <p className="text-slate-400 text-center py-8">No matching permissions.</p>;
+                    return Object.entries(groupByModule(filtered)).map(([mod, perms]) => (
                     <div key={mod}>
                       <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2">
                         {mod}
@@ -1025,7 +1143,8 @@ export default function RolesPage() {
                         ))}
                       </div>
                     </div>
-                  ))}
+                  ));
+                  })()}
                 </div>
               )}
             </div>

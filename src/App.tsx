@@ -11,6 +11,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 // import AppsPage from './pages/apps/AppsPage';
 import OrganizationsPage from './pages/organizations/OrganizationsPage';
+import OrganizationDetailPage from './pages/organizations/OrganizationDetailPage';
 import UsersPage from './pages/users/UsersPage';
 import RolesPage from './pages/roles/RolesPage';
 import SubscriptionsPage from './pages/subscriptions/SubscriptionsPage';
@@ -38,6 +39,7 @@ export default function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               {/* <Route path="/apps" element={<AppsPage />} /> */}
               <Route path="/organizations" element={<OrganizationsPage />} />
+              <Route path="/organizations/:id" element={<OrganizationDetailPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/roles" element={<RolesPage />} />
               <Route path="/subscriptions" element={<SubscriptionsPage />} />

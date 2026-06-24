@@ -9,13 +9,13 @@ import {
   Package,
   BarChart3,
   LogOut,
-  ChevronDown,
   Menu,
   X,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { getOrganization } from '../api/organizations';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,11 +29,19 @@ const navItems = [
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
+function formatLoginAt(iso: string) {
+  const d = new Date(iso);
+  const day = d.getDate();
+  const month = d.toLocaleString('en', { month: 'short' });
+  const year = d.getFullYear();
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
+  return `${day} ${month} ${year}, ${time}`;
+}
+
 export default function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  // Desktop: collapsed (icons-only) vs expanded
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
       return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1';
@@ -42,11 +50,21 @@ export default function Layout() {
     }
   });
 
-  // Mobile: drawer open/closed
   const [mobileOpen, setMobileOpen] = useState(false);
-
   const [profileOpen, setProfileOpen] = useState(false);
+  const [orgName, setOrgName] = useState('');
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Fetch org name
+  useEffect(() => {
+    if (!user?.orgId) return;
+    getOrganization(user.orgId)
+      .then((res: any) => {
+        const org = res?.data || res;
+        setOrgName(org?.name || '');
+      })
+      .catch(() => {});
+  }, [user?.orgId]);
 
   const handleLogout = async () => {
     setProfileOpen(false);
@@ -63,12 +81,8 @@ export default function Layout() {
     });
   };
 
-  // Close mobile drawer on route change
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
-  // Close profile dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
@@ -79,49 +93,104 @@ export default function Layout() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Lock body scroll when mobile drawer open
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
-  const sidebarWidth = collapsed ? 'lg:w-20' : 'lg:w-64';
-  const mainMargin = collapsed ? 'lg:ml-20' : 'lg:ml-64';
+  const sidebarW = collapsed ? 'lg:w-20' : 'lg:w-64';
+  const mainML = collapsed ? 'lg:ml-20' : 'lg:ml-64';
+
+  const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase();
+  const loginAt = localStorage.getItem('loginAt');
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Mobile backdrop */}
+
+      {/* ── Full-width top header ── */}
+      <header className="fixed top-0 left-0 right-0 h-16 bg-brand-header flex items-center justify-between px-4 sm:px-6 z-40 shadow-sm">
+
+        {/* Left: mobile hamburger + app title */}
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-2 -ml-2 rounded-lg text-white/80 hover:bg-white/15 hover:text-white transition-all duration-200 ease-out lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
+          <h1 className="text-lg sm:text-xl font-semibold text-white tracking-tight truncate">
+            User Management
+          </h1>
+        </div>
+
+        {/* Right: org info (static) + user avatar (clickable) */}
+        <div className="flex items-center gap-3">
+
+          {/* Org name + last login — static, no click */}
+          <div className="hidden sm:block text-left min-w-0 bg-white/10 border border-white/20 rounded-xl px-3 py-1.5">
+            <p className="text-sm font-semibold text-white leading-tight truncate max-w-[200px]">
+              {orgName}
+            </p>
+            {loginAt && (
+              <p className="text-[11px] text-white/60 leading-tight mt-0.5">
+                Last Login: {formatLoginAt(loginAt)}
+              </p>
+            )}
+          </div>
+
+          {/* User initials avatar — click to open dropdown */}
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => setProfileOpen((v) => !v)}
+              className="w-9 h-9 rounded-full bg-emerald-400 hover:bg-emerald-300 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors duration-200 ring-2 ring-white/30"
+              aria-label="Profile"
+            >
+              {initials}
+            </button>
+
+            {profileOpen && (
+              <div className="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-soft border border-slate-200 py-2 z-50 animate-dropdown">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <p className="text-sm font-semibold text-slate-900 truncate">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors duration-200"
+                >
+                  <LogOut size={16} />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* ── Mobile backdrop ── */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden animate-fade-in"
+          className="fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-sm lg:hidden animate-fade-in"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
+      {/* ── Sidebar — starts below header ── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 bg-brand-rail text-white flex flex-col shadow-xl
+        className={`fixed top-16 left-0 bottom-0 z-30 bg-brand-rail text-white flex flex-col shadow-xl
           transition-all duration-300 ease-out
-          w-64 ${sidebarWidth}
+          w-64 ${sidebarW}
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
-        {/* Logo */}
-        <div className={`flex items-center gap-2.5 px-4 py-5 border-b border-white/10 ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}>
-          <div className="w-9 h-9 shrink-0 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center shadow-lg shadow-primary-500/30">
-            <Shield size={18} className="text-white" />
-          </div>
-          <span className={`text-lg font-medium tracking-tight whitespace-nowrap overflow-hidden transition-all duration-300 ease-out ${collapsed ? 'lg:w-0 lg:opacity-0' : 'w-auto opacity-100'}`}>
-            User Management
-          </span>
-          {/* Mobile close button */}
+        {/* Mobile close */}
+        <div className="flex items-center justify-end px-3 pt-3 lg:hidden">
           <button
             onClick={() => setMobileOpen(false)}
-            className="ml-auto p-1.5 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white transition-colors duration-200 lg:hidden"
+            className="p-1.5 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white transition-colors duration-200"
             aria-label="Close menu"
           >
             <X size={20} />
@@ -150,7 +219,6 @@ export default function Layout() {
                   {item.label}
                 </span>
 
-                {/* Themed hover tooltip — only when sidebar is collapsed (desktop) */}
                 {collapsed && (
                   <span
                     role="tooltip"
@@ -181,69 +249,13 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className={`flex flex-col min-h-screen transition-all duration-300 ease-out ${mainMargin}`}>
-        {/* Top Header */}
-        <header className="h-16 bg-brand-header flex items-center justify-between px-4 sm:px-6 shrink-0 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="p-2 -ml-2 rounded-lg text-white/80 hover:bg-white/15 hover:text-white transition-all duration-200 ease-out lg:hidden"
-              aria-label="Open menu"
-            >
-              <Menu size={20} />
-            </button>
-            <h1 className="text-lg sm:text-xl font-medium text-white tracking-tight truncate">Dream Books</h1>
-          </div>
-
-          {/* Profile dropdown */}
-          <div className="relative" ref={profileRef}>
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/15 transition-all duration-200 ease-out"
-            >
-              <span className="hidden sm:block text-sm text-white/90 font-normal truncate max-w-[160px]">
-                {user?.firstName} {user?.lastName}
-              </span>
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full object-cover ring-2 ring-white/40"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-medium shadow-sm ring-1 ring-white/30">
-                  {user?.firstName?.[0]}
-                  {user?.lastName?.[0]}
-                </div>
-              )}
-              <ChevronDown size={16} className={`hidden sm:block text-white/70 transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {profileOpen && (
-              <div className="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-soft border border-slate-200 py-2 z-50 animate-dropdown">
-                <div className="px-4 py-3 border-b border-slate-100">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{user?.firstName} {user?.lastName}</p>
-                  <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors duration-200"
-                >
-                  <LogOut size={16} />
-                  Sign out
-                </button>
-              </div>
-            )}
-          </div>
-        </header>
-
-        {/* Page Content */}
+      {/* ── Main content ── */}
+      <div className={`flex flex-col min-h-screen pt-16 transition-all duration-300 ease-out ${mainML}`}>
         <main className="flex-1 overflow-x-hidden">
           <Outlet />
         </main>
       </div>
+
     </div>
   );
 }

@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('accessToken', token);
     localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('loginAt', new Date().toISOString());
 
     setAccessToken(token);
     setUser(userData);
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('accessToken', token);
     localStorage.setItem('refreshToken', refresh);
     localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('loginAt', new Date().toISOString());
     setAccessToken(token);
     setUser(userData);
   };
@@ -73,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('loginAt');
 
     setAccessToken(null);
     setUser(null);

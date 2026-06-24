@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   Edit2,
@@ -6,6 +7,7 @@ import {
   Search,
   CheckCircle2,
   XCircle,
+  Download,
 } from "lucide-react";
 import ThemedSelect from "../../components/ThemedSelect";
 import Pagination from "../../components/Pagination";
@@ -322,11 +324,42 @@ const OrganizationsPage: React.FC = () => {
     );
   };
 
+  const handleExport = () => {
+    const escape = (v: any) => {
+      const s = v == null ? '' : String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const row = (...cols: any[]) => cols.map(escape).join(',');
+    const lines = [
+      row('Name', 'Email', 'GSTIN', 'Status', 'Plan', 'Members', 'Created'),
+      ...allFilteredOrgs.map((o) =>
+        row(
+          o.name, o.email, o.gstin || '', o.status, orgPlanName,
+          memberCount ?? '',
+          o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '',
+        )
+      ),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Organization_Export.csv';
+    a.click();
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-accent-500">Organization</h1>
+        <button
+          onClick={handleExport}
+          disabled={allFilteredOrgs.length === 0}
+          className="flex items-center gap-2 border border-slate-300 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm font-medium"
+        >
+          <Download className="w-4 h-4" />
+          Export
+        </button>
       </div>
 
       {/* Search */}
@@ -390,8 +423,13 @@ const OrganizationsPage: React.FC = () => {
               ) : (
                 orgs.map((org) => (
                   <tr key={org.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                      {org.name}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <Link
+                        to={`/organizations/${org.id}`}
+                        className="text-primary-600 hover:text-primary-700 hover:underline"
+                      >
+                        {org.name}
+                      </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{org.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono text-center">
