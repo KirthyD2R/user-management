@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "migrate": "node server/src/migrate.js"
+    "migrate": "node server/src/migrate.js",
+    "dev:admin": "vite --config apps/admin/vite.config.ts",
+    "dev:client": "vite --config apps/client/vite.config.ts",
+    "build:admin": "vite build --config apps/admin/vite.config.ts",
+    "build:client": "vite build --config apps/client/vite.config.ts"
   },
   "dependencies": {
     "axios": "^1.7.9",

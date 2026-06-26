@@ -3,6 +3,11 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./shared/**/*.{js,ts,jsx,tsx}",
+    "./apps/admin/index.html",
+    "./apps/admin/src/**/*.{js,ts,jsx,tsx}",
+    "./apps/client/index.html",
+    "./apps/client/src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
