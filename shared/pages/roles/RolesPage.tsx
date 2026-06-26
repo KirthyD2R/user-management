@@ -23,6 +23,7 @@ import { getOrganization } from "../../api/organizations";
 import { listOrgUsers } from "../../api/users";
 import { getApp } from "../../api/apps";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppConfig } from "../../contexts/AppConfig";
 import { extractArray, extractData } from "../../api/helpers";
 import { useToast } from "../../components/Toast";
 import ThemedSelect from "../../components/ThemedSelect";
@@ -36,6 +37,7 @@ type ActiveTab = "roles" | "assign" | "lookup" | "rolelookup" | "permissions";
 
 export default function RolesPage() {
   const { user: authUser } = useAuth();
+  const { excludeRoleSlugs } = useAppConfig();
   const { showToast } = useToast();
   const [roles, setRoles] = useState<Role[]>([]);
   const APP_PREFIX = "books";
@@ -115,7 +117,7 @@ export default function RolesPage() {
     setRolesError("");
     try {
       const res = await listRoles(APP_PREFIX);
-      setRoles(extractArray<Role>(res));
+      setRoles(extractArray<Role>(res).filter((r) => !excludeRoleSlugs.includes(r.slug)));
     } catch {
       setRolesError("Failed to load roles.");
     } finally {
@@ -246,7 +248,7 @@ export default function RolesPage() {
       const res: any = await getUserRolesForApp(lookupUserId, lookupAppSlug);
       const rolesArr = res?.data?.roles ?? extractArray<any>(res);
       console.log("[User Role Lookup] response roles:", rolesArr);
-      setLookupRoles(rolesArr);
+      setLookupRoles(rolesArr.filter((r: any) => !excludeRoleSlugs.includes(r.slug || r.roleSlug)));
       setLookupDone(true);
     } catch (err: any) {
       const msg = err?.response?.data?.error?.message || err?.response?.data?.message || "Failed to look up user roles.";

@@ -4,6 +4,7 @@ import { ToastProvider } from '@shared/components/Toast';
 import ProtectedRoute from '@shared/components/ProtectedRoute';
 import PublicRoute from '@shared/components/PublicRoute';
 import Layout from './components/Layout';
+import AdminGuard from './components/AdminGuard';
 import LoginPage from '@shared/pages/auth/LoginPage';
 import RegisterPage from '@shared/pages/auth/RegisterPage';
 import ForgotPasswordPage from '@shared/pages/auth/ForgotPasswordPage';
@@ -31,16 +32,18 @@ export default function App() {
             </Route>
 
             <Route element={<ProtectedRoute />}>
-              <Route element={<Layout />}>
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/organizations" element={<OrganizationsPage />} />
-                <Route path="/organizations/:id" element={<OrganizationDetailPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/roles" element={<RolesPage />} />
-                <Route path="/subscriptions" element={<SubscriptionsPage />} />
-                <Route path="/plans" element={<PlansPage />} />
-                <Route path="/usage" element={<UsagePage />} />
+              <Route element={<AdminGuard />}>
+                <Route element={<Layout />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/organizations" element={<OrganizationsPage />} />
+                  <Route path="/organizations/:id" element={<OrganizationDetailPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/roles" element={<RolesPage />} />
+                  <Route path="/subscriptions" element={<SubscriptionsPage />} />
+                  <Route path="/plans" element={<PlansPage />} />
+                  <Route path="/usage" element={<UsagePage />} />
+                </Route>
               </Route>
             </Route>
           </Routes>

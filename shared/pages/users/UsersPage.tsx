@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Edit2, XCircle, CheckCircle2, AppWindow, Search, X, Plus, Download, Upload, FileText } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAppConfig } from '../../contexts/AppConfig';
 import { listOrgUsers, inviteUser, notifyUserInvite, updateUser, toggleUserStatus, getUserApps, deleteUser } from '../../api/users';
 import { getUserRolesForApp, listRoles } from '../../api/roles';
 import { getOrganization } from '../../api/organizations';
@@ -16,6 +17,7 @@ const LIMIT = 10;
 
 export default function UsersPage() {
   const { user: authUser } = useAuth();
+  const { excludeRoleSlugs } = useAppConfig();
   const { showToast } = useToast();
   const orgId = authUser?.orgId;
 
@@ -65,7 +67,7 @@ export default function UsersPage() {
         ]);
         const myOrg = extractData<{ id: string; name: string }>(orgRes);
         setOrgs(myOrg ? [myOrg] : []);
-        setRoles(extractArray<{ slug: string; name: string }>(rolesRes));
+        setRoles(extractArray<{ slug: string; name: string }>(rolesRes).filter((r) => !excludeRoleSlugs.includes(r.slug)));
       } catch { /* ignore */ }
     };
     fetchDropdownData();

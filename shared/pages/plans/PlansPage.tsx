@@ -58,7 +58,15 @@ export default function PlansPage() {
     setError('');
     try {
       const res = await listPlans(APP_SLUG);
-      setPlans(extractArray<PlanData>(res));
+      const raw = extractArray<any>(res);
+      const normalized: PlanData[] = raw.map((p: any) => ({
+        ...p,
+        pricing: p.pricing ?? {
+          monthly: p.monthlyPrice ?? p.monthly_price ?? (p.interval === 'yearly' ? 0 : (p.price ?? 0)),
+          yearly: p.yearlyPrice ?? p.yearly_price ?? (p.interval === 'yearly' ? (p.price ?? 0) : (p.price ?? 0) * 12),
+        },
+      }));
+      setPlans(normalized);
     } catch {
       setError('Failed to load plans.');
     } finally {
@@ -182,8 +190,10 @@ export default function PlansPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {filteredPlans.map((plan) => {
-            const price = billingCycle === 'monthly' ? plan.pricing.monthly : plan.pricing.yearly;
-            const perMonth = billingCycle === 'yearly' ? Math.round(plan.pricing.yearly / 12) : plan.pricing.monthly;
+            const monthly = plan.pricing?.monthly ?? 0;
+            const yearly = plan.pricing?.yearly ?? 0;
+            const price = billingCycle === 'monthly' ? monthly : yearly;
+            const perMonth = billingCycle === 'yearly' ? Math.round(yearly / 12) : monthly;
 
             return (
               <div

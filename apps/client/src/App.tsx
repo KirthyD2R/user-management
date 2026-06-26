@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@shared/contexts/AuthContext';
 import { ToastProvider } from '@shared/components/Toast';
+import { AppConfigProvider } from '@shared/contexts/AppConfig';
 import ProtectedRoute from '@shared/components/ProtectedRoute';
 import PublicRoute from '@shared/components/PublicRoute';
 import { useAuth } from '@shared/contexts/AuthContext';
@@ -26,6 +27,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
+        <AppConfigProvider excludeRoleSlugs={['books_super_admin']}>
         <AuthProvider>
           <Routes>
             <Route element={<PublicRoute />}>
@@ -50,6 +52,7 @@ export default function App() {
             </Route>
           </Routes>
         </AuthProvider>
+        </AppConfigProvider>
       </ToastProvider>
     </BrowserRouter>
   );

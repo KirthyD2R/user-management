@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -11,8 +12,10 @@ function passwordResetApi() {
     async configureServer(server: any) {
       const { default: express } = await import('express');
       const serverRoot = path.resolve(__dirname, '../../server/src/routes');
-      const authRouter = (await import(/* @vite-ignore */ `${serverRoot}/auth.js`)).default;
-      const usersRouter = (await import(/* @vite-ignore */ `${serverRoot}/users.js`)).default;
+      const authUrl = pathToFileURL(path.join(serverRoot, 'auth.js')).href;
+      const usersUrl = pathToFileURL(path.join(serverRoot, 'users.js')).href;
+      const authRouter = (await import(/* @vite-ignore */ authUrl)).default;
+      const usersRouter = (await import(/* @vite-ignore */ usersUrl)).default;
       const app = express();
       app.use(express.json());
       app.use('/api/auth', authRouter);
