@@ -8,6 +8,7 @@ import {
 } from '../../api/subscriptions';
 import { getOrganization } from '../../api/organizations';
 import { listPlans } from '../../api/plans';
+import { listOrgUsers } from '../../api/users';
 import { extractArray } from '../../api/helpers';
 import { Plan } from '../../types';
 import ThemedSelect from '../../components/ThemedSelect';
@@ -29,6 +30,7 @@ export default function SubscriptionsPage() {
   const orgId = user?.orgId || '';
 
   const [subscriptions, setSubscriptions] = useState<Sub[]>([]);
+  const [memberCount, setMemberCount] = useState<number | null>(null);
   const [orgName, setOrgName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -53,6 +55,12 @@ export default function SubscriptionsPage() {
     fetchSubscriptions();
     getOrganization(orgId)
       .then((res: any) => setOrgName((res?.data || res)?.name || ''))
+      .catch(() => {});
+    listOrgUsers(orgId, 1, 1000)
+      .then((res: any) => {
+        const users = extractArray<any>(res);
+        setMemberCount(users.length);
+      })
       .catch(() => {});
     listPlans('books')
       .then((res) => setPlanOptions(extractArray<Plan>(res)))
@@ -185,7 +193,11 @@ export default function SubscriptionsPage() {
                   <tr key={sub.id} className="hover:bg-slate-50 transition">
                     <td className="px-6 py-4 font-medium text-slate-900">{orgName || '-'}</td>
                     <td className="px-6 py-4 text-slate-700">{sub.plan?.name || '-'}</td>
-                    <td className="px-6 py-4 text-slate-700 text-center">{sub.plan?.maxUsers ?? '-'}</td>
+                    <td className="px-6 py-4 text-slate-700 text-center font-medium">
+                      {sub.plan?.maxUsers != null
+                        ? `${memberCount ?? '…'}/${sub.plan.maxUsers}`
+                        : '-'}
+                    </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge(sub.status)}`}>
                         {sub.status}
